@@ -1,0 +1,6 @@
+pllconfig:
+    pllconfig:
+        pllsource: sda
+        hsefrequency: 8000000
+        lsefrequency: 16000000
+        requirefrequency: 50
