@@ -61,12 +61,12 @@ func TestSetPllFreq(t *testing.T) {
 		{
 			name:     "set hse source",
 			expected: 10,
-			src:      PllSource{HseFreq: 10, LseFreq: 5, PllSource: "hse"},
+			src:      PllSource{HseFreq: 10, LseFreq: 5, PllSource: "HSE"},
 		},
 		{
 			name:     "set lse source",
 			expected: 5,
-			src:      PllSource{HseFreq: 10, LseFreq: 5, PllSource: "lse"},
+			src:      PllSource{HseFreq: 10, LseFreq: 5, PllSource: "LSE"},
 		},
 		{
 			name:     "set unknown source",
@@ -78,7 +78,7 @@ func TestSetPllFreq(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.src.setSrcFreq()
-			require.Equal(t, tc.expected, tc.src.srcFreq)
+			require.Equal(t, tc.expected, tc.src.SrcFreq)
 		})
 	}
 
@@ -88,46 +88,46 @@ func TestCalculateDivisionFactors(t *testing.T) {
 	tests := []struct {
 		name     string
 		src      PllSource
-		expected DivFactors
-		result   bool
+		expected divFactors
+		err      error
 	}{
 		{
 			name:     "calculate for 180Mhz",
-			src:      PllSource{srcFreq: 8_000_000, RequireFreq: 180_000_000},
-			expected: DivFactors{m: 4, n: 180, p: 2},
-			result:   true,
+			src:      PllSource{SrcFreq: 8_000_000, RequireFreq: 180_000_000},
+			expected: divFactors{M: 4, N: 180, P: 2},
+			err:      nil,
 		},
 		{
 			name:     "calculate for 120Mhz",
-			src:      PllSource{srcFreq: 8_000_000, RequireFreq: 120_000_000},
-			expected: DivFactors{m: 4, n: 120, p: 2},
-			result:   true,
+			src:      PllSource{SrcFreq: 8_000_000, RequireFreq: 120_000_000},
+			expected: divFactors{M: 4, N: 120, P: 2},
+			err:      nil,
 		},
 		{
 			name:     "calculate for 60Mhz",
-			src:      PllSource{srcFreq: 8_000_000, RequireFreq: 60_000_000},
-			expected: DivFactors{m: 4, n: 60, p: 2},
-			result:   true,
+			src:      PllSource{SrcFreq: 8_000_000, RequireFreq: 60_000_000},
+			expected: divFactors{M: 4, N: 60, P: 2},
+			err:      nil,
 		},
 		{
 			name:     "calculate for 0Mhz",
-			src:      PllSource{srcFreq: 8_000_000, RequireFreq: 0},
-			expected: DivFactors{},
-			result:   false,
+			src:      PllSource{SrcFreq: 8_000_000, RequireFreq: 0},
+			expected: divFactors{},
+			err:      ErrorDivFactorCalc,
 		},
 		{
 			name:     "calculate for 181Mhz",
-			src:      PllSource{srcFreq: 8_000_000, RequireFreq: 180_000_001},
-			expected: DivFactors{},
-			result:   false,
+			src:      PllSource{SrcFreq: 8_000_000, RequireFreq: 180_000_001},
+			expected: divFactors{},
+			err:      ErrorDivFactorCalc,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := tc.src.CalculateDivisionFactors()
-			require.Equal(t, tc.result, result)
-			require.Equal(t, tc.expected, tc.src.divFactors)
+			err := tc.src.calculateDivisionFactors()
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.expected, tc.src.DivFactors)
 		})
 	}
 }

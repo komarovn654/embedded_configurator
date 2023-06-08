@@ -1,5 +1,0 @@
-PllConfig:
-  PllSource: hse
-  HseFrequency: 16000000
-  LseFrequency: 8000000
-  RequireFrequency: 180000000

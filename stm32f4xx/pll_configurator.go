@@ -1,6 +1,9 @@
 package stm32_pllconfig
 
 import (
+	"errors"
+
+	"github.com/komarovn654/embedded_configurator/utils"
 	validator "github.com/komarovn654/struct_validator"
 )
 
@@ -10,6 +13,8 @@ var (
 	FactorN       = Range{50, 432}
 	FreqVcoIn     = Range{1_000_000, 2_000_000}
 	FreqVcoOut    = Range{100_000_000, 432_000_000}
+
+	ErrorDivFactorCalc = errors.New("error in the calculation of division factors")
 )
 
 type Range struct {
@@ -23,39 +28,56 @@ type PllSource struct {
 	LseFreq     int    `mapstructure:"LseFrequency" validate:"in:16000000"`
 	RequireFreq int    `mapstructure:"RequireFrequency" validate:"max:180000000"`
 
-	srcFreq    int
-	divFactors DivFactors
+	SrcFreq    int
+	DivFactors divFactors
 }
 
-type PllConfig struct {
-	Src PllSource `mapstructure:"PllConfig"`
+type divFactors struct {
+	P int
+	N int
+	M int
+	Q int
+	R int
 }
 
-type DivFactors struct {
-	p int
-	n int
-	m int
-	q int
-	r int
+func NewPllSource() *PllSource {
+	return &PllSource{}
 }
 
-func (this *PllSource) AssertFields() error {
+func (this *PllSource) SetupPll() error {
+	// if err := this.assertFields(); err != nil {
+	// 	return err
+	// }
+	utils.Logger.Sugar().Info("success fields assert")
+
+	this.setSrcFreq()
+	utils.Logger.Sugar().Infof("pll source freq: %vHz, with %v source", this.SrcFreq, this.PllSource)
+
+	if err := this.calculateDivisionFactors(); err != nil {
+		return err
+	}
+	utils.Logger.Sugar().Infof("div factors: m: %v, n: %v, p: %v", this.DivFactors.M, this.DivFactors.N, this.DivFactors.P)
+
+	return nil
+}
+
+func (this *PllSource) assertFields() error {
 	return validator.Validate(this)
 }
 
 func (this *PllSource) setSrcFreq() {
-	if this.PllSource == "hse" {
-		this.srcFreq = this.HseFreq
+	if this.PllSource == "HSE" {
+		this.SrcFreq = this.HseFreq
 	}
 
-	if this.PllSource == "lse" {
-		this.srcFreq = this.LseFreq
+	if this.PllSource == "LSE" {
+		this.SrcFreq = this.LseFreq
 	}
 }
 
-func (this *PllSource) CalculateDivisionFactors() bool {
+func (this *PllSource) calculateDivisionFactors() error {
 	for m := FactorM.min; m <= FactorM.max; m++ {
-		vcoIn := this.srcFreq / m
+		vcoIn := this.SrcFreq / m
 		if (vcoIn < FreqVcoIn.min) || (vcoIn > FreqVcoIn.max) {
 			continue
 		}
@@ -69,14 +91,14 @@ func (this *PllSource) CalculateDivisionFactors() bool {
 			for _, p := range FactorValuesP {
 				pllFreq := vcoOut / p
 				if pllFreq == this.RequireFreq {
-					this.divFactors.m = m
-					this.divFactors.n = n
-					this.divFactors.p = p
-					return true
+					this.DivFactors.M = m
+					this.DivFactors.N = n
+					this.DivFactors.P = p
+					return nil
 				}
 			}
 		}
 	}
 
-	return false
+	return ErrorDivFactorCalc
 }
