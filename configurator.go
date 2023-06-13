@@ -1,73 +1,53 @@
 package main
 
 import (
+	"os"
+
 	"github.com/komarovn654/embedded_configurator/config"
 	"github.com/komarovn654/embedded_configurator/generator"
-	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx"
+	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
 	"github.com/komarovn654/embedded_configurator/utils"
 )
 
-func SetupSTM32Pll() *config.PllConfig {
-	cnfg, err := config.New()
+func GenerateHeadersPLL(cnfg *config.Config) error {
+	if err := cnfg.Pll.PllSrc.SetupPll(); err != nil {
+		utils.Logger.Sugar().Fatal(err)
+	}
+
+	gnrt, err := generator.New(cnfg.GetPllTmplPath(), os.Stdout)
 	if err != nil {
 		utils.Logger.Sugar().Fatal(err)
 	}
 
-	pllCnfg, err := cnfg.ParsePllConfig(stm32_pllconfig.NewPllSource())
+	return gnrt.GenerateHeader(cnfg.Pll.Paths.PllDstPath, cnfg.Pll)
+}
+
+func GenerateHeadersSTM32(cnfg *config.Config) error {
+	err := cnfg.ParseConfig(config.Interfaces{"pll": stm32_pllconfig.NewPllSource()})
 	if err != nil {
 		utils.Logger.Sugar().Fatal(err)
 	}
 
-	if err := pllCnfg.PllSrc.SetupPll(); err != nil {
-		utils.Logger.Sugar().Fatal(err)
-	}
-
-	return pllCnfg
+	return GenerateHeadersPLL(cnfg)
 }
 
 func init() {
 	utils.InitializeLogger()
 }
 
-type StmPllConfig struct {
-	PllSrc stm32_pllconfig.PllSource
-}
-
 func main() {
-	pllConfig := SetupSTM32Pll()
-	gnrt, err := generator.New("/Users/nikolajkomarov/stm32f4/tools/embedded_configurator/stm32f4xx/pll.template")
+	var err error
+	cnfg, err := config.New()
 	if err != nil {
 		utils.Logger.Sugar().Fatal(err)
 	}
 
-	gnrt.GenerateHeader(pllConfig)
+	switch cnfg.GetMCUType() {
+	case config.McuSTM32F4xx:
+		err = GenerateHeadersSTM32(cnfg)
+		if err != nil {
+			utils.Logger.Sugar().Fatal(err)
+		}
+	}
 
-	// config := Config{}
-	// src := &stm32_pllconfig.PllSource{}
-	// fmt.Println(config.Init())
-	// fmt.Println(config.GetMCUType())
-	// pll, _ := config.GetPllConfig(src)
-	// fmt.Println(pll.PllSrc)
-	// var pllConfig PllConfig
-
-	// var PllSource stm32_pllconfig.PllSource
-	// pllConfig.Pll = &PllSource
-
-	// viper.AddConfigPath(".")
-	// viper.SetConfigFile("config.yaml")
-	// viper.ReadInConfig()
-
-	// viper.Unmarshal(&pllConfig)
-	// fmt.Printf("%+v\n", pllConfig.Pll)
-
-	// fmt.Printf("%+v\n", pllConfig)
-
-	// f, _ := os.Open("pll.template")
-	// pllConfig.Pll.SetSrcFreq()
-	// pllConfig.Pll.CalculateDivisionFactors()
-	// templ, _ := template.ParseFiles("pll.template")
-	// templ.Execute(os.Stdout, pllConfig)
-
-	// templ2, _ := template.New("test2").Parse("#define PLL_REQUIRED_FREQUENCY {{.Src.RequireFreq}}\n")
-	// templ2.Execute(os.Stdout, nil)
 }
