@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"io"
 	"os"
 	"text/template"
 
@@ -9,14 +8,14 @@ import (
 )
 
 type PllGenerator struct {
-	destPath io.Writer
-
 	tmpl *template.Template
+
+	dstPath string
 }
 
-func New(tmplPath string, destPath io.Writer) (*PllGenerator, error) {
+func New(tmplPath string, dstPath string) (*PllGenerator, error) {
 	gnrt := PllGenerator{}
-	gnrt.destPath = destPath
+	gnrt.dstPath = dstPath
 	if err := gnrt.init(tmplPath); err != nil {
 		return nil, err
 	}
@@ -28,19 +27,22 @@ func (gnrt *PllGenerator) init(tmplPath string) error {
 	if err != nil {
 		return err
 	}
-	utils.Logger.Sugar().Infof("pllGenerator instance: tmpl: %v", tmplPath)
+
+	utils.Logger.Sugar().Infof("pll generator instance: tmpl: %v", tmplPath)
 	gnrt.tmpl = tmpl
 	return nil
 }
 
-func (gnrt *PllGenerator) GenerateHeader(dest string, config any) error {
-	if dest != "" {
-		f, err := os.OpenFile(dest, os.O_RDWR|os.O_CREATE, 0777)
+func (gnrt *PllGenerator) GenerateHeader(config any) error {
+	if gnrt.dstPath != "" {
+		utils.Logger.Sugar().Infof("the generation will be in %v", gnrt.dstPath)
+		f, err := os.OpenFile(gnrt.dstPath, os.O_RDWR|os.O_CREATE, 0777)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
 		return gnrt.tmpl.Execute(f, config)
 	}
+	utils.Logger.Sugar().Warn("no destination path, the generation will be in stdout")
 	return gnrt.tmpl.Execute(os.Stdout, config)
 }

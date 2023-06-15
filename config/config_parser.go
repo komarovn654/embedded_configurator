@@ -15,33 +15,51 @@ var (
 	ErrorMCUType = errors.New("unsupported mcu type")
 )
 
-type Config struct {
-	mcu    string
-	parser viper.Viper
+type Option = func(c *Config)
 
+type Config struct {
+	parser      viper.Viper
+	configPaths []string
+	configName  string
+
+	mcu string
 	Pll PllConfig
 }
 
-func New() (*Config, error) {
+func New(opts ...Option) (*Config, error) {
 	cnfg := Config{}
-	if err := cnfg.init(); err != nil {
+	for _, opt := range opts {
+		opt(&cnfg)
+	}
+
+	cnfg.applyOptions()
+
+	if err := cnfg.parser.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
-	return &cnfg, nil
+	err := cnfg.setMCUType()
+	return &cnfg, err
 }
 
-func (cnfg *Config) init() error {
-	cnfg.parser = *viper.New()
-	cnfg.parser.AddConfigPath(".")
-	cnfg.parser.AddConfigPath("config")
-	cnfg.parser.SetConfigName("config")
-	if err := cnfg.parser.ReadInConfig(); err != nil {
-		return err
+func (cnfg *Config) applyOptions() {
+	for _, path := range cnfg.configPaths {
+		cnfg.parser.AddConfigPath(path)
 	}
 
-	err := cnfg.setMCUType()
-	return err
+	cnfg.parser.SetConfigName(cnfg.configName)
+}
+
+func SetConfigPath(name string) Option {
+	return func(c *Config) {
+		c.configPaths = append(c.configPaths, name)
+	}
+}
+
+func SetConfigName(name string) Option {
+	return func(c *Config) {
+		c.configName = name
+	}
 }
 
 func (cnfg *Config) setMCUType() error {
