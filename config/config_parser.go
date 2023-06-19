@@ -11,8 +11,9 @@ var (
 	McuSTM32F4xx = "stm32f4xx"
 	McuTypes     = []string{McuSTM32F4xx}
 
-	ErrorMCUKey  = errors.New("MCU key not found")
-	ErrorMCUType = errors.New("unsupported mcu type")
+	ErrorMCUKey     = errors.New("MCU key not found")
+	ErrorMCUType    = errors.New("unsupported mcu type")
+	ErrorConfigType = errors.New("unsupported config type")
 )
 
 type Option = func(c *Config)
@@ -96,10 +97,11 @@ func (cnfg *Config) GetPllDstPath() string {
 
 func (cnfg *Config) ParseConfig(configs Interfaces) error {
 	for name, config := range configs {
-		if name == "pll" {
-			if err := cnfg.parsePllConfig(config); err != nil {
-				return err
-			}
+		switch name {
+		case PllConfigName:
+			return cnfg.parsePllConfig(config)
+		default:
+			return ErrorConfigType
 		}
 	}
 

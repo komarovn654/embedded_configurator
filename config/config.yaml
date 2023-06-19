@@ -4,5 +4,6 @@ PllConfig:
   HseFrequency: 8000000
   LseFrequency: 16000000
   RequireFrequency: 180000000
+  
   PllTmpltPath: stm32f4xx/pll.template
   PllDstPath: stm32f4xx/pll.h
