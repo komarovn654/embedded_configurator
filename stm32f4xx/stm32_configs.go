@@ -5,6 +5,6 @@ import (
 	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
 )
 
-func GetSTM32Configs() config.Interfaces {
-	return config.Interfaces{config.PllConfigName: stm32_pllconfig.NewPllSource()}
+func GetSTM32Configs() config.ConfigInterfaces {
+	return config.ConfigInterfaces{config.PllConfigName: stm32_pllconfig.NewPllSource()}
 }

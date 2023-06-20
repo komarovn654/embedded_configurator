@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/komarovn654/embedded_configurator/config"
@@ -14,16 +15,17 @@ func GenerateHeadersPLL(cnfg *config.Config) error {
 		utils.Logger.Sugar().Fatal(err)
 	}
 
-	gnrt, err := generator.New(cnfg.GetPllTmplPath(), os.Stdout)
+	gnrt, err := generator.New(cnfg.GetPllTmplPath(), cnfg.GetPllDstPath())
 	if err != nil {
+		fmt.Println(os.Getwd())
 		utils.Logger.Sugar().Fatal(err)
 	}
 
-	return gnrt.GenerateHeader(cnfg.Pll.Paths.PllDstPath, cnfg.Pll)
+	return gnrt.GenerateHeader(cnfg.Pll)
 }
 
 func GenerateHeadersSTM32(cnfg *config.Config) error {
-	err := cnfg.ParseConfig(config.Interfaces{"pll": stm32_pllconfig.NewPllSource()})
+	err := cnfg.ParseConfig(config.ConfigInterfaces{"pll": stm32_pllconfig.NewPllSource()})
 	if err != nil {
 		utils.Logger.Sugar().Fatal(err)
 	}
@@ -37,7 +39,7 @@ func init() {
 
 func main() {
 	var err error
-	cnfg, err := config.New()
+	cnfg, err := config.New(config.SetConfigName("config"), config.SetConfigPath("./config"))
 	if err != nil {
 		utils.Logger.Sugar().Fatal(err)
 	}
@@ -49,5 +51,4 @@ func main() {
 			utils.Logger.Sugar().Fatal(err)
 		}
 	}
-
 }

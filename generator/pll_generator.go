@@ -35,13 +35,17 @@ func (gnrt *PllGenerator) init(tmplPath string) error {
 
 func (gnrt *PllGenerator) GenerateHeader(config any) error {
 	if gnrt.dstPath != "" {
-		utils.Logger.Sugar().Infof("the generation will be in %v", gnrt.dstPath)
+
 		f, err := os.OpenFile(gnrt.dstPath, os.O_RDWR|os.O_CREATE, 0777)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		return gnrt.tmpl.Execute(f, config)
+		if err := gnrt.tmpl.Execute(f, config); err != nil {
+			return err
+		}
+		utils.Logger.Sugar().Infof("header generated %v", gnrt.dstPath)
+		return nil
 	}
 	utils.Logger.Sugar().Warn("no destination path, the generation will be in stdout")
 	return gnrt.tmpl.Execute(os.Stdout, config)

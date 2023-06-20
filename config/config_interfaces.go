@@ -4,7 +4,7 @@ var (
 	PllConfigName = "pll"
 )
 
-type Interfaces map[string]interface{}
+type ConfigInterfaces map[string]interface{}
 
 type PllSourceIf interface {
 	SetupPll() error

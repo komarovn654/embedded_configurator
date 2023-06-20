@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func assertPllIf(t *testing.T, cnfgs config.Interfaces) {
+func assertPllIf(t *testing.T, cnfgs config.ConfigInterfaces) {
 	for key, value := range cnfgs {
 		require.Equal(t, key, config.PllConfigName)
 		v, ok := value.(config.PllSourceIf)

@@ -2,131 +2,14 @@ package config
 
 import (
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/komarovn654/embedded_configurator/utils"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
 )
-
-type ConfigMap map[string]map[string]interface{}
-
-type paths struct {
-	dir  string
-	name string
-}
-
-type TestConfig struct {
-	PllSrc PllSourceIf `mapstructure:"PllConfig"`
-
-	Paths Common `mapstructure:"PllConfig"`
-}
-
-type TestPllSource struct {
-	PllSource   string `mapstructure:"PllSource"`
-	HseFreq     int    `mapstructure:"HseFrequency"`
-	LseFreq     int    `mapstructure:"LseFrequency"`
-	RequireFreq int    `mapstructure:"RequireFrequency"`
-}
-
-func (ps *TestPllSource) SetupPll() error {
-	return nil
-}
-
-var (
-	ValidConfig = ConfigMap{
-		"PllConfig": {
-			"PllSource":        "HSE",
-			"HseFrequency":     8000000,
-			"LseFrequency":     16000000,
-			"RequireFrequency": 180000000,
-		}}
-)
-
-func setupTmp() (paths, error) {
-	utils.InitializeLogger()
-
-	tmpDir, err := os.MkdirTemp("./", "TestCnfg")
-	if err != nil {
-		return paths{}, err
-	}
-	cnfg, err := os.CreateTemp(tmpDir, "cnfg")
-	if err != nil {
-		return paths{}, err
-	}
-	defer cnfg.Close()
-
-	os.Rename(cnfg.Name(), cnfg.Name()+".yaml")
-
-	return paths{dir: tmpDir, name: cnfg.Name()}, err
-}
-
-func writeConfigString(cnfgPath string, cnfgText string) error {
-	f, err := os.OpenFile(cnfgPath, os.O_RDWR, 0777)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.WriteString(cnfgText)
-
-	return err
-}
-
-func writeConfigMap(cnfgPath string, cnfgMap ConfigMap) error {
-	f, err := os.OpenFile(cnfgPath, os.O_RDWR, 0777)
-	if err != nil {
-		return err
-	}
-
-	b, err := yaml.Marshal(cnfgMap)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(b)
-
-	return err
-}
-
-func setupConfig(cnfg *Config, cnfgName string) error {
-	cnfg.parser.SetConfigName(cnfgName)
-	cnfg.parser.AddConfigPath(".")
-	return cnfg.parser.ReadInConfig()
-}
-
-func assertMCUType(mcu string) bool {
-	for _, m := range McuTypes {
-		if mcu == m {
-			return true
-		}
-	}
-	return false
-}
-
-func assertPllFields(cnfgRef TestPllSource, cnfg *Config) bool {
-	srcCnfg := cnfg.Pll.PllSrc.(*TestPllSource)
-	srcValue := reflect.ValueOf(*srcCnfg)
-	srcType := reflect.TypeOf(*srcCnfg)
-
-	refValue := reflect.ValueOf(cnfgRef)
-
-	for i := 0; i < srcType.NumField(); i++ {
-		_, ok := srcType.Field(i).Tag.Lookup("mapstructure")
-		if ok {
-			field := srcType.Field(i).Name
-			if srcValue.FieldByName(field).Interface() != refValue.FieldByName(field).Interface() {
-				return false
-			}
-		}
-	}
-
-	return true
-}
 
 func TestSetConfigPath(t *testing.T) {
 	t.Run("common", func(t *testing.T) {
@@ -262,7 +145,7 @@ func TestGetPllTmplPath(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New(), Pll: PllConfig{Paths: Common{PllTemplate: tc.path}}}
+			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{Paths: Common{PllTemplate: tc.path}}}
 
 			require.Equal(t, tc.path, cnfg.GetPllTmplPath())
 		})
@@ -286,7 +169,7 @@ func TestGetPllDstPath(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New(), Pll: PllConfig{Paths: Common{PllDstPath: tc.path}}}
+			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{Paths: Common{PllDstPath: tc.path}}}
 
 			require.Equal(t, tc.path, cnfg.GetPllDstPath())
 		})
@@ -310,19 +193,13 @@ func TestParsePllConfig(t *testing.T) {
 			err:       nil,
 			assertRes: true,
 		},
-		{
-			name:      "valid config",
-			config:    ValidConfig,
-			err:       nil,
-			assertRes: true,
-		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup environment
-			cnfg := Config{parser: *viper.New()}
-			err = writeConfigMap(paths.name+".yaml", ValidConfig)
+			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{}}
+			err = writeConfigMap(paths.name+".yaml", tc.config)
 			require.NoError(t, err, "setup environment error")
 			err = setupConfig(&cnfg, paths.name)
 			require.NoError(t, err, "setup environment error")
@@ -336,7 +213,45 @@ func TestParsePllConfig(t *testing.T) {
 			refPll := TestPllSource{}
 			ref := TestConfig{PllSrc: &refPll}
 			mapstructure.Decode(ValidConfig, &ref)
-			require.True(t, assertPllFields(refPll, &cnfg))
+			require.Equal(t, tc.assertRes, assertPllFields(refPll, &cnfg))
+		})
+	}
+}
+
+func TestParseConfig(t *testing.T) {
+	paths, err := setupTmp()
+	require.NoError(t, err, "setup environment error")
+	defer os.RemoveAll(paths.dir)
+
+	tests := []struct {
+		name      string
+		intf      ConfigInterfaces
+		err       error
+		assertRes bool
+	}{
+		{
+			name:      "valid interfaces",
+			intf:      ConfigInterfaces{PllConfigName: &TestPllSource{}},
+			err:       nil,
+			assertRes: true,
+		},
+		{
+			name:      "valid interfaces",
+			intf:      ConfigInterfaces{"unsup interface": &TestPllSource{}},
+			err:       ErrorConfigType,
+			assertRes: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{}}
+			err = writeConfigMap(paths.name+".yaml", ValidConfig)
+			require.NoError(t, err, "setup environment error")
+			err = setupConfig(&cnfg, paths.name)
+			require.NoError(t, err, "setup environment error")
+
+			require.Equal(t, tc.err, cnfg.ParseConfig(tc.intf))
 		})
 	}
 

@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/komarovn654/embedded_configurator/utils"
 	"github.com/spf13/viper"
@@ -24,11 +25,11 @@ type Config struct {
 	configName  string
 
 	mcu string
-	Pll PllConfig
+	Pll *PllConfig
 }
 
 func New(opts ...Option) (*Config, error) {
-	cnfg := Config{}
+	cnfg := Config{Pll: &PllConfig{}, parser: *viper.New()}
 	for _, opt := range opts {
 		opt(&cnfg)
 	}
@@ -95,7 +96,7 @@ func (cnfg *Config) GetPllDstPath() string {
 	return cnfg.Pll.Paths.PllDstPath
 }
 
-func (cnfg *Config) ParseConfig(configs Interfaces) error {
+func (cnfg *Config) ParseConfig(configs ConfigInterfaces) error {
 	for name, config := range configs {
 		switch name {
 		case PllConfigName:
@@ -109,13 +110,14 @@ func (cnfg *Config) ParseConfig(configs Interfaces) error {
 }
 
 func (cnfg *Config) parsePllConfig(config interface{}) error {
+	fmt.Println(config)
 	c, ok := config.(PllSourceIf)
 	if !ok {
 		utils.Logger.Sugar().Fatalf("cast error") // TODO
 	}
 	cnfg.Pll.PllSrc = c
 
-	if err := cnfg.parser.Unmarshal(&cnfg.Pll); err != nil {
+	if err := cnfg.parser.Unmarshal(cnfg.Pll); err != nil {
 		return err
 	}
 
