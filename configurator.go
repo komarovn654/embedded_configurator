@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/komarovn654/embedded_configurator/config"
 	"github.com/komarovn654/embedded_configurator/generator"
 	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
@@ -17,7 +14,6 @@ func GenerateHeadersPLL(cnfg *config.Config) error {
 
 	gnrt, err := generator.New(cnfg.GetPllTmplPath(), cnfg.GetPllDstPath())
 	if err != nil {
-		fmt.Println(os.Getwd())
 		utils.Logger.Sugar().Fatal(err)
 	}
 
@@ -35,6 +31,7 @@ func GenerateHeadersSTM32(cnfg *config.Config) error {
 
 func init() {
 	utils.InitializeLogger()
+	utils.Logger.Sugar().Infof("embedded configurator start")
 }
 
 func main() {

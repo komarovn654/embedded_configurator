@@ -6,4 +6,4 @@ PllConfig:
   RequireFrequency: 180000000
   
   PllTmpltPath: ./stm32f4xx/pll_config/pll.template
-  PllDstPath: ./stm32f4xx/pll_config/pll.h
+  PllDstPath: ./pll.h

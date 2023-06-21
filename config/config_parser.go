@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/komarovn654/embedded_configurator/utils"
 	"github.com/spf13/viper"
@@ -110,10 +109,9 @@ func (cnfg *Config) ParseConfig(configs ConfigInterfaces) error {
 }
 
 func (cnfg *Config) parsePllConfig(config interface{}) error {
-	fmt.Println(config)
 	c, ok := config.(PllSourceIf)
 	if !ok {
-		utils.Logger.Sugar().Fatalf("cast error") // TODO
+		utils.Logger.Sugar().Fatalf("cast error")
 	}
 	cnfg.Pll.PllSrc = c
 
