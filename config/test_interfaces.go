@@ -10,7 +10,7 @@ import (
 
 type ConfigMap map[string]map[string]interface{}
 
-type paths struct {
+type confPaths struct {
 	dir  string
 	name string
 }
@@ -42,22 +42,22 @@ var (
 		}}
 )
 
-func setupTmp() (paths, error) {
+func setupTmp() (confPaths, error) {
 	utils.InitializeLogger()
 
 	tmpDir, err := os.MkdirTemp("./", "TestCnfg")
 	if err != nil {
-		return paths{}, err
+		return confPaths{}, err
 	}
 	cnfg, err := os.CreateTemp(tmpDir, "cnfg")
 	if err != nil {
-		return paths{}, err
+		return confPaths{}, err
 	}
 	defer cnfg.Close()
 
 	os.Rename(cnfg.Name(), cnfg.Name()+".yaml")
 
-	return paths{dir: tmpDir, name: cnfg.Name()}, err
+	return confPaths{dir: tmpDir, name: cnfg.Name()}, err
 }
 
 func writeConfigString(cnfgPath string, cnfgText string) error {
