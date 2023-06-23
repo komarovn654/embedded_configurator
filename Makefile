@@ -16,8 +16,3 @@ test:
 
 clean:
 	go clean
-
-help:
-	for file in $(GOTESTPACKAGES) do
-		@echo file ; \
-	done
