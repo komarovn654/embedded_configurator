@@ -3,15 +3,15 @@ package stm32_configs
 import (
 	"testing"
 
-	"github.com/komarovn654/embedded_configurator/config"
+	parser "github.com/komarovn654/embedded_configurator/config_parser"
 	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
 	"github.com/stretchr/testify/require"
 )
 
-func assertPllIf(t *testing.T, cnfgs config.ConfigInterfaces) {
+func assertPllIf(t *testing.T, cnfgs parser.ConfigInterfaces) {
 	for key, value := range cnfgs {
-		require.Equal(t, key, config.PllConfigName)
-		v, ok := value.(config.PllSourceIf)
+		require.Equal(t, key, parser.PllConfigName)
+		v, ok := value.(parser.PllSourceIf)
 		require.True(t, ok)
 		require.IsType(t, &stm32_pllconfig.PllSource{}, v)
 	}

@@ -28,7 +28,7 @@ func (gnrt *PllGenerator) init(tmplPath string) error {
 		return err
 	}
 
-	utils.Logger.Sugar().Infof("pll generator instance: tmpl: %v", tmplPath)
+	utils.Logger.Infof("pll generator instance: tmpl: %v", tmplPath)
 	gnrt.tmpl = tmpl
 	return nil
 }
@@ -44,9 +44,9 @@ func (gnrt *PllGenerator) GenerateHeader(config any) error {
 		if err := gnrt.tmpl.Execute(f, config); err != nil {
 			return err
 		}
-		utils.Logger.Sugar().Infof("header generated %v", gnrt.dstPath)
+		utils.Logger.Infof("header generated %v", gnrt.dstPath)
 		return nil
 	}
-	utils.Logger.Sugar().Warn("no destination path, the generation will be in stdout")
+	utils.Logger.Warn("no destination path, the generation will be in stdout")
 	return gnrt.tmpl.Execute(os.Stdout, config)
 }

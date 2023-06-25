@@ -1,10 +1,10 @@
 package stm32_configs
 
 import (
-	"github.com/komarovn654/embedded_configurator/config"
+	parser "github.com/komarovn654/embedded_configurator/config_parser"
 	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
 )
 
-func GetSTM32Configs() config.ConfigInterfaces {
-	return config.ConfigInterfaces{config.PllConfigName: stm32_pllconfig.NewPllSource()}
+func GetSTM32Configs() parser.ConfigInterfaces {
+	return parser.ConfigInterfaces{parser.PllConfigName: stm32_pllconfig.NewPllSource()}
 }

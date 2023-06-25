@@ -1,4 +1,4 @@
-package config
+package config_parser
 
 import (
 	"errors"
@@ -11,15 +11,17 @@ var (
 	McuSTM32F4xx = "stm32f4xx"
 	McuTypes     = []string{McuSTM32F4xx}
 
-	ErrorMCUKey     = errors.New("MCU key not found")
-	ErrorMCUType    = errors.New("unsupported mcu type")
-	ErrorConfigType = errors.New("unsupported config type")
+	ErrorMCUKey          = errors.New("MCU key not found")
+	ErrorMCUType         = errors.New("unsupported mcu type")
+	ErrorMCUConfigType   = errors.New("mcu type must be a string")
+	ErrorConfigType      = errors.New("unsupported config type")
+	ErrorConfigInterface = errors.New("config interface cast error")
 )
 
-type Option = func(c *Config)
+type Option = func(c *ConfigParser)
 
-type Config struct {
-	parser      viper.Viper
+type ConfigParser struct {
+	parser      *viper.Viper
 	configPaths []string
 	configName  string
 
@@ -27,8 +29,8 @@ type Config struct {
 	Pll *PllConfig
 }
 
-func New(opts ...Option) (*Config, error) {
-	cnfg := Config{Pll: &PllConfig{}, parser: *viper.New()}
+func New(opts ...Option) (*ConfigParser, error) {
+	cnfg := ConfigParser{Pll: &PllConfig{}, parser: viper.New()}
 	for _, opt := range opts {
 		opt(&cnfg)
 	}
@@ -43,7 +45,7 @@ func New(opts ...Option) (*Config, error) {
 	return &cnfg, err
 }
 
-func (cnfg *Config) applyOptions() {
+func (cnfg *ConfigParser) applyOptions() {
 	for _, path := range cnfg.configPaths {
 		cnfg.parser.AddConfigPath(path)
 	}
@@ -52,25 +54,25 @@ func (cnfg *Config) applyOptions() {
 }
 
 func SetConfigPath(name string) Option {
-	return func(c *Config) {
+	return func(c *ConfigParser) {
 		c.configPaths = append(c.configPaths, name)
 	}
 }
 
 func SetConfigName(name string) Option {
-	return func(c *Config) {
+	return func(c *ConfigParser) {
 		c.configName = name
 	}
 }
 
-func (cnfg *Config) setMCUType() error {
+func (cnfg *ConfigParser) setMCUType() error {
 	if !cnfg.parser.IsSet("MCU") {
 		return ErrorMCUKey
 	}
 
 	mcu, ok := cnfg.parser.Get("MCU").(string)
 	if !ok {
-		return nil
+		return ErrorMCUConfigType
 	}
 
 	for _, supMcu := range McuTypes {
@@ -83,19 +85,19 @@ func (cnfg *Config) setMCUType() error {
 	return ErrorMCUType
 }
 
-func (cnfg *Config) GetMCUType() string {
+func (cnfg *ConfigParser) GetMCUType() string {
 	return cnfg.mcu
 }
 
-func (cnfg *Config) GetPllTmplPath() string {
+func (cnfg *ConfigParser) GetPllTmplPath() string {
 	return cnfg.Pll.Paths.PllTemplate
 }
 
-func (cnfg *Config) GetPllDstPath() string {
+func (cnfg *ConfigParser) GetPllDstPath() string {
 	return cnfg.Pll.Paths.PllDstPath
 }
 
-func (cnfg *Config) ParseConfig(configs ConfigInterfaces) error {
+func (cnfg *ConfigParser) ParseConfig(configs ConfigInterfaces) error {
 	for name, config := range configs {
 		switch name {
 		case PllConfigName:
@@ -108,10 +110,10 @@ func (cnfg *Config) ParseConfig(configs ConfigInterfaces) error {
 	return nil
 }
 
-func (cnfg *Config) parsePllConfig(config interface{}) error {
+func (cnfg *ConfigParser) parsePllConfig(config interface{}) error {
 	c, ok := config.(PllSourceIf)
 	if !ok {
-		utils.Logger.Sugar().Fatalf("cast error")
+		return ErrorConfigInterface
 	}
 	cnfg.Pll.PllSrc = c
 
@@ -119,8 +121,8 @@ func (cnfg *Config) parsePllConfig(config interface{}) error {
 		return err
 	}
 
-	utils.Logger.Sugar().Infof("pll src: %+v", cnfg.Pll.PllSrc)
-	utils.Logger.Sugar().Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
+	utils.Logger.Infof("pll src: %+v", cnfg.Pll.PllSrc)
+	utils.Logger.Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
 
 	return nil
 }

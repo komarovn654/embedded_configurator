@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"os"
 	"time"
 
@@ -9,27 +8,66 @@ import (
 )
 
 var (
-	Logger *zap.Logger
+	Logger logger
 )
 
-func InitializeLogger() {
-	conf := zap.NewDevelopmentConfig()
-	conf.OutputPaths = []string{createLogDirectory() + time.Now().UTC().Format("2006-01-02") + "_log.txt"}
-	conf.Development = true
-
-	logger, err := conf.Build()
-	if err != nil {
-		log.Fatal(err)
-	}
-	Logger = logger
-
+type logger struct {
+	logger *zap.Logger
+	path   string
 }
 
-func createLogDirectory() string {
-	path := ".log"
+type Option = func(*logger)
+
+func SetLoggerPath(path string) Option {
+	return func(l *logger) {
+		l.path = path
+	}
+}
+
+func InitializeLogger(opt ...Option) error {
+	for _, option := range opt {
+		option(&Logger)
+	}
+
+	conf := zap.NewProductionConfig()
+	if Logger.path != "" {
+		dir, err := createLogDirectory(Logger.path)
+		if err != nil {
+			return err
+		}
+		conf.OutputPaths = []string{dir + time.Now().UTC().Format("2006-01-02") + ".log"}
+	}
+
+	logg, err := conf.Build()
+	if err != nil {
+		return err
+	}
+
+	Logger.logger = logg
+
+	return nil
+}
+
+func createLogDirectory(path string) (string, error) {
 	err := os.Mkdir(path, 0700)
 	if err != nil && !os.IsExist(err) {
-		log.Fatal(err)
+		return "", err
 	}
-	return path + "/"
+	return path + "/", nil
+}
+
+func (l *logger) Info(args ...interface{}) {
+	l.logger.Sugar().Info(args)
+}
+
+func (l *logger) Infof(template string, args ...interface{}) {
+	l.logger.Sugar().Infof(template, args)
+}
+
+func (l *logger) Warn(args ...interface{}) {
+	l.logger.Sugar().Warn(args)
+}
+
+func (l *logger) Fatal(args ...interface{}) {
+	l.logger.Sugar().Fatal(args)
 }

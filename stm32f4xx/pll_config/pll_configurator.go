@@ -48,15 +48,15 @@ func (src *PllSource) SetupPll() error {
 	if err := src.assertFields(); err != nil {
 		return err
 	}
-	utils.Logger.Sugar().Info("success fields assert")
+	utils.Logger.Info("success fields assert")
 
 	src.setSrcFreq()
-	utils.Logger.Sugar().Infof("pll source freq: %vHz with %v source", src.SrcFreq, src.PllSource)
+	utils.Logger.Infof("pll source freq: %vHz with %v source", src.SrcFreq, src.PllSource)
 
 	if err := src.calculateDivisionFactors(); err != nil {
 		return err
 	}
-	utils.Logger.Sugar().Infof("div factors: m: %v, n: %v, p: %v", src.DivFactors.M, src.DivFactors.N, src.DivFactors.P)
+	utils.Logger.Infof("div factors: m: %v, n: %v, p: %v", src.DivFactors.M, src.DivFactors.N, src.DivFactors.P)
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package config
+package config_parser
 
 import (
 	"os"
@@ -13,7 +13,7 @@ import (
 
 func TestSetConfigPath(t *testing.T) {
 	t.Run("common", func(t *testing.T) {
-		cnfg := Config{}
+		cnfg := ConfigParser{}
 		paths := make([]string, 10)
 		for i := 0; i < 10; i++ {
 			path := "test_path" + strconv.Itoa(i)
@@ -28,7 +28,7 @@ func TestSetConfigPath(t *testing.T) {
 
 func TestSetConfigName(t *testing.T) {
 	t.Run("common", func(t *testing.T) {
-		cnfg := Config{}
+		cnfg := ConfigParser{}
 		name := "test_name"
 		opt := SetConfigName(name)
 		opt(&cnfg)
@@ -43,7 +43,7 @@ func TestApplyOptions(t *testing.T) {
 	defer os.RemoveAll(paths.dir)
 
 	t.Run("common", func(t *testing.T) {
-		cnfg := Config{parser: *viper.New()}
+		cnfg := ConfigParser{parser: viper.New()}
 		path := paths.dir
 		name := strings.Split(paths.name, "/")[2] // get file name only without path and ".yaml"
 		opt := SetConfigPath(path)
@@ -89,7 +89,7 @@ func TestSetMCUType(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New()}
+			cnfg := ConfigParser{parser: viper.New()}
 			err := writeConfigString(paths.name+".yaml", tc.mcu)
 			require.NoError(t, err, "setup environment error")
 			err = setupConfig(&cnfg, paths.name)
@@ -121,7 +121,7 @@ func TestGetMCUType(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New(), mcu: tc.mcu}
+			cnfg := ConfigParser{parser: viper.New(), mcu: tc.mcu}
 
 			require.Equal(t, tc.mcu, cnfg.GetMCUType())
 		})
@@ -145,7 +145,7 @@ func TestGetPllTmplPath(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{Paths: Common{PllTemplate: tc.path}}}
+			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{Paths: Common{PllTemplate: tc.path}}}
 
 			require.Equal(t, tc.path, cnfg.GetPllTmplPath())
 		})
@@ -169,7 +169,7 @@ func TestGetPllDstPath(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{Paths: Common{PllDstPath: tc.path}}}
+			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{Paths: Common{PllDstPath: tc.path}}}
 
 			require.Equal(t, tc.path, cnfg.GetPllDstPath())
 		})
@@ -198,7 +198,7 @@ func TestParsePllConfig(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// setup environment
-			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{}}
+			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{}}
 			err = writeConfigMap(paths.name+".yaml", tc.config)
 			require.NoError(t, err, "setup environment error")
 			err = setupConfig(&cnfg, paths.name)
@@ -245,7 +245,7 @@ func TestParseConfig(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cnfg := Config{parser: *viper.New(), Pll: &PllConfig{}}
+			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{}}
 			err = writeConfigMap(paths.name+".yaml", ValidConfig)
 			require.NoError(t, err, "setup environment error")
 			err = setupConfig(&cnfg, paths.name)
@@ -274,7 +274,7 @@ func TestNew(t *testing.T) {
 		name   string
 		path   confPaths
 		mcu    string
-		expect Config
+		expect ConfigParser
 		err    error
 	}{
 		{

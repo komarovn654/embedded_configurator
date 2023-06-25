@@ -1,4 +1,4 @@
-package config
+package config_parser
 
 import (
 	"os"
@@ -87,7 +87,7 @@ func writeConfigMap(cnfgPath string, cnfgMap ConfigMap) error {
 	return err
 }
 
-func setupConfig(cnfg *Config, cnfgName string) error {
+func setupConfig(cnfg *ConfigParser, cnfgName string) error {
 	cnfg.parser.SetConfigName(cnfgName)
 	cnfg.parser.AddConfigPath(".")
 	return cnfg.parser.ReadInConfig()
@@ -102,7 +102,7 @@ func assertMCUType(mcu string) bool {
 	return false
 }
 
-func assertPllFields(cnfgRef TestPllSource, cnfg *Config) bool {
+func assertPllFields(cnfgRef TestPllSource, cnfg *ConfigParser) bool {
 	srcCnfg := cnfg.Pll.PllSrc.(*TestPllSource)
 	srcValue := reflect.ValueOf(*srcCnfg)
 	srcType := reflect.TypeOf(*srcCnfg)
