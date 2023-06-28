@@ -8,30 +8,30 @@ import (
 )
 
 var (
-	Logger logger
+	logger log
 )
 
-type logger struct {
-	logger *zap.Logger
+type log struct {
+	zapper *zap.Logger
 	path   string
 }
 
-type Option = func(*logger)
+type Option = func(*log)
 
 func SetLoggerPath(path string) Option {
-	return func(l *logger) {
+	return func(l *log) {
 		l.path = path
 	}
 }
 
 func InitializeLogger(opt ...Option) error {
 	for _, option := range opt {
-		option(&Logger)
+		option(&logger)
 	}
 
 	conf := zap.NewProductionConfig()
-	if Logger.path != "" {
-		dir, err := createLogDirectory(Logger.path)
+	if logger.path != "" {
+		dir, err := createLogDirectory(logger.path)
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func InitializeLogger(opt ...Option) error {
 		return err
 	}
 
-	Logger.logger = logg
+	logger.zapper = logg
 
 	return nil
 }
@@ -56,18 +56,18 @@ func createLogDirectory(path string) (string, error) {
 	return path + "/", nil
 }
 
-func (l *logger) Info(args ...interface{}) {
-	l.logger.Sugar().Info(args)
+func Info(args ...interface{}) {
+	logger.zapper.Sugar().Info(args)
 }
 
-func (l *logger) Infof(template string, args ...interface{}) {
-	l.logger.Sugar().Infof(template, args)
+func Infof(template string, args ...interface{}) {
+	logger.zapper.Sugar().Infof(template, args)
 }
 
-func (l *logger) Warn(args ...interface{}) {
-	l.logger.Sugar().Warn(args)
+func Warn(args ...interface{}) {
+	logger.zapper.Sugar().Warn(args)
 }
 
-func (l *logger) Fatal(args ...interface{}) {
-	l.logger.Sugar().Fatal(args)
+func Fatal(args ...interface{}) {
+	logger.zapper.Sugar().Fatal(args)
 }

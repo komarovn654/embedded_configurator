@@ -5,7 +5,7 @@ import (
 
 	cnfgCommon "github.com/komarovn654/embedded_configurator/config/common"
 	cnfgPll "github.com/komarovn654/embedded_configurator/config/pll_config"
-	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
+	stm32Pll "github.com/komarovn654/embedded_configurator/generator/targets/stm32/stm32_target_pll"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +14,7 @@ func assertPllIf(t *testing.T, cnfgs cnfgCommon.ConfigInterfaces) {
 		require.Equal(t, key, cnfgPll.ConfigName)
 		v, ok := value.(cnfgPll.PllSettingsIf)
 		require.True(t, ok)
-		require.IsType(t, &stm32_pllconfig.PllSource{}, v)
+		require.IsType(t, &stm32Pll.PllSettings{}, v)
 	}
 }
 

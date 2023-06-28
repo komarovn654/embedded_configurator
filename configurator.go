@@ -6,7 +6,7 @@ import (
 	parser "github.com/komarovn654/embedded_configurator/config_parser"
 	"github.com/komarovn654/embedded_configurator/generator"
 	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
-	l "github.com/komarovn654/embedded_configurator/utils/log"
+	logger "github.com/komarovn654/embedded_configurator/utils/log"
 )
 
 func GenerateHeadersPLL(cnfg *parser.ConfigParser) error {
@@ -35,18 +35,18 @@ func main() {
 	if err := l.InitializeLogger(l.SetLoggerPath(".log")); err != nil {
 		log.Fatal(err)
 	}
-	l.Logger.Info("embedded configurator start")
+	logger.Info("embedded configurator start")
 
 	cnfg, err := parser.New(parser.SetConfigName("config"), parser.SetConfigPath("."))
 	if err != nil {
-		l.Logger.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	switch cnfg.GetMCUType() {
 	case parser.McuSTM32F4xx:
 		err = GenerateHeadersSTM32(cnfg)
 		if err != nil {
-			l.Logger.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 }
