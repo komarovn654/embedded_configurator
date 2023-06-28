@@ -5,5 +5,5 @@ PllConfig:
   LseFrequency: 16000000
   RequireFrequency: 180000000
   
-  PllTmpltPath: ./stm32f4xx/pll_config/pll.template
-  PllDstPath: ./pll.h
+  TemplatePath: ./stm32f4xx/pll_config/pll.template
+  DestinationPath: ./pll.h

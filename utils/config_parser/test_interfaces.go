@@ -4,7 +4,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/komarovn654/embedded_configurator/utils"
+	l "github.com/komarovn654/embedded_configurator/utils/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -43,7 +43,7 @@ var (
 )
 
 func setupTmp() (confPaths, error) {
-	utils.InitializeLogger()
+	l.InitializeLogger()
 
 	tmpDir, err := os.MkdirTemp("./", "TestCnfg")
 	if err != nil {

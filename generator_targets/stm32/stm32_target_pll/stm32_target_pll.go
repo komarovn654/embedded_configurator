@@ -3,7 +3,7 @@ package stm32_pllconfig
 import (
 	"errors"
 
-	"github.com/komarovn654/embedded_configurator/utils"
+	l "github.com/komarovn654/embedded_configurator/utils/log"
 	validator "github.com/komarovn654/struct_validator"
 )
 
@@ -48,15 +48,15 @@ func (src *PllSource) SetupPll() error {
 	if err := src.assertFields(); err != nil {
 		return err
 	}
-	utils.Logger.Info("success fields assert")
+	l.Logger.Info("success fields assert")
 
 	src.setSrcFreq()
-	utils.Logger.Infof("pll source freq: %vHz with %v source", src.SrcFreq, src.PllSource)
+	l.Logger.Infof("pll source freq: %vHz with %v source", src.SrcFreq, src.PllSource)
 
 	if err := src.calculateDivisionFactors(); err != nil {
 		return err
 	}
-	utils.Logger.Infof("div factors: m: %v, n: %v, p: %v", src.DivFactors.M, src.DivFactors.N, src.DivFactors.P)
+	l.Logger.Infof("div factors: m: %v, n: %v, p: %v", src.DivFactors.M, src.DivFactors.N, src.DivFactors.P)
 
 	return nil
 }

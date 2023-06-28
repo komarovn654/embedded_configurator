@@ -3,7 +3,7 @@ package config_parser
 import (
 	"errors"
 
-	"github.com/komarovn654/embedded_configurator/utils"
+	l "github.com/komarovn654/embedded_configurator/utils/log"
 	"github.com/spf13/viper"
 )
 
@@ -89,14 +89,6 @@ func (cnfg *ConfigParser) GetMCUType() string {
 	return cnfg.mcu
 }
 
-func (cnfg *ConfigParser) GetPllTmplPath() string {
-	return cnfg.Pll.Paths.PllTemplate
-}
-
-func (cnfg *ConfigParser) GetPllDstPath() string {
-	return cnfg.Pll.Paths.PllDstPath
-}
-
 func (cnfg *ConfigParser) ParseConfig(configs ConfigInterfaces) error {
 	for name, config := range configs {
 		switch name {
@@ -121,8 +113,8 @@ func (cnfg *ConfigParser) parsePllConfig(config interface{}) error {
 		return err
 	}
 
-	utils.Logger.Infof("pll src: %+v", cnfg.Pll.PllSrc)
-	utils.Logger.Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
+	l.Logger.Infof("pll src: %+v", cnfg.Pll.PllSrc)
+	l.Logger.Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
 
 	return nil
 }

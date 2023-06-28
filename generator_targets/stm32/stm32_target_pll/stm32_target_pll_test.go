@@ -1,9 +1,9 @@
-package stm32_pllconfig
+package stm32_pll_target
 
 import (
 	"testing"
 
-	"github.com/komarovn654/embedded_configurator/utils"
+	l "github.com/komarovn654/embedded_configurator/utils/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,7 +36,7 @@ func TestSetupPll(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			utils.InitializeLogger()
+			l.InitializeLogger()
 			err := tc.src.SetupPll()
 			if tc.err {
 				require.Error(t, err)

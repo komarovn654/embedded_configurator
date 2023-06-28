@@ -1,4 +1,4 @@
-package generator
+package pll_generator
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/komarovn654/embedded_configurator/utils"
+	l "github.com/komarovn654/embedded_configurator/utils/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +22,7 @@ type paths struct {
 }
 
 func setupTmp() (paths, error) {
-	utils.InitializeLogger()
+	l.InitializeLogger()
 
 	tmpDir, err := os.MkdirTemp("./", "TestCopy")
 	if err != nil {
