@@ -1,0 +1,9 @@
+MCU: stm32f4xx
+PllConfig:
+  PllSource: HSE
+  HseFrequency: 8000000
+  LseFrequency: 16000000
+  RequireFrequency: 180000000
+  
+  TemplatePath: ./stm32f4xx/pll_config/pll.template
+  DestinationPath: ./pll.h
