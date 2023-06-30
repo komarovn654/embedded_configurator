@@ -7,6 +7,10 @@ type CommonPaths struct {
 	DestinationPath string `mapstructure:"DestinationPath"`
 }
 
+func New() *CommonPaths {
+	return new(CommonPaths)
+}
+
 func (c *CommonPaths) GetTemplatePath() string {
 	return c.TemplatePath
 }

@@ -20,7 +20,7 @@ func assertPllIf(t *testing.T, cnfgs cnfgCommon.ConfigInterfaces) {
 
 func TestGetSTM32Configs(t *testing.T) {
 	t.Run("stm32 config interfaces", func(t *testing.T) {
-		res := GetSTM32Configs()
+		res := GetSTM32Targets()
 		assertPllIf(t, res)
 	})
 }

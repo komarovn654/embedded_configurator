@@ -6,6 +6,6 @@ import (
 	stm32Pll "github.com/komarovn654/embedded_configurator/generator/targets/stm32/stm32_target_pll"
 )
 
-func GetSTM32Configs() cnfgCommon.ConfigInterfaces {
+func GetSTM32Targets() cnfgCommon.ConfigInterfaces {
 	return cnfgCommon.ConfigInterfaces{cnfgPll.ConfigName: stm32Pll.NewPllSettings()}
 }
