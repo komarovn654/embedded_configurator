@@ -7,3 +7,8 @@ PllConfig:
   
   TemplatePath: ./stm32f4xx/pll_config/pll.template
   DestinationPath: ./pll.h
+ADCConfig:
+  Type: single
+
+  TemplatePath: adc.template
+  DestinationPath: ./adc.h

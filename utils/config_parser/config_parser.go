@@ -1,9 +1,12 @@
-package config_parser
+package configparser
 
 import (
 	"errors"
+	"reflect"
 
-	l "github.com/komarovn654/embedded_configurator/utils/log"
+	"github.com/komarovn654/embedded_configurator/config"
+	pllconfig "github.com/komarovn654/embedded_configurator/config/pll_config"
+	logger "github.com/komarovn654/embedded_configurator/utils/log"
 	"github.com/spf13/viper"
 )
 
@@ -24,33 +27,27 @@ type ConfigParser struct {
 	parser      *viper.Viper
 	configPaths []string
 	configName  string
-
-	mcu string
-	Pll *PllConfig
 }
 
 func New(opts ...Option) (*ConfigParser, error) {
-	cnfg := ConfigParser{Pll: &PllConfig{}, parser: viper.New()}
+	parser := new(ConfigParser)
+	parser.parser = viper.New()
 	for _, opt := range opts {
-		opt(&cnfg)
+		opt(parser)
 	}
+	parser.applyOptions()
 
-	cnfg.applyOptions()
+	err := parser.parser.ReadInConfig()
 
-	if err := cnfg.parser.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	err := cnfg.setMCUType()
-	return &cnfg, err
+	return parser, err
 }
 
-func (cnfg *ConfigParser) applyOptions() {
-	for _, path := range cnfg.configPaths {
-		cnfg.parser.AddConfigPath(path)
+func (parser *ConfigParser) applyOptions() {
+	for _, path := range parser.configPaths {
+		parser.parser.AddConfigPath(path)
 	}
 
-	cnfg.parser.SetConfigName(cnfg.configName)
+	parser.parser.SetConfigName(parser.configName)
 }
 
 func SetConfigPath(name string) Option {
@@ -65,35 +62,23 @@ func SetConfigName(name string) Option {
 	}
 }
 
-func (cnfg *ConfigParser) setMCUType() error {
-	if !cnfg.parser.IsSet("MCU") {
-		return ErrorMCUKey
-	}
-
-	mcu, ok := cnfg.parser.Get("MCU").(string)
+func (parser *ConfigParser) ReadMcuType() string {
+	mcu, ok := parser.parser.Get("MCU").(string)
 	if !ok {
-		return ErrorMCUConfigType
+		return ""
 	}
 
-	for _, supMcu := range McuTypes {
-		if supMcu == mcu {
-			cnfg.mcu = mcu
-			return nil
-		}
-	}
-
-	return ErrorMCUType
+	return mcu
 }
 
-func (cnfg *ConfigParser) GetMCUType() string {
-	return cnfg.mcu
-}
-
-func (cnfg *ConfigParser) ParseConfig(configs ConfigInterfaces) error {
-	for name, config := range configs {
-		switch name {
-		case PllConfigName:
-			return cnfg.parsePllConfig(config)
+func (parser *ConfigParser) ParseConfig(config *config.Configs) error {
+	configType := reflect.TypeOf(config)
+	for i := 0; i < configType.NumField(); i++ {
+		switch configType.Name() {
+		case pllconfig.ConfigName:
+			if err := parser.parsePllConfig(config.GetPllConfig().GetTarget()); err != nil {
+				return err
+			}
 		default:
 			return ErrorConfigType
 		}
@@ -102,19 +87,13 @@ func (cnfg *ConfigParser) ParseConfig(configs ConfigInterfaces) error {
 	return nil
 }
 
-func (cnfg *ConfigParser) parsePllConfig(config interface{}) error {
-	c, ok := config.(PllSourceIf)
-	if !ok {
-		return ErrorConfigInterface
-	}
-	cnfg.Pll.PllSrc = c
-
-	if err := cnfg.parser.Unmarshal(cnfg.Pll); err != nil {
+func (parser *ConfigParser) parsePllConfig(target pllconfig.PllTargetIf) error {
+	if err := parser.parser.Unmarshal(target); err != nil {
 		return err
 	}
-
-	l.Logger.Infof("pll src: %+v", cnfg.Pll.PllSrc)
-	l.Logger.Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
+	logger.Info("pll parse done")
+	// logger.Infof("pll src: %+v", target.PllSrc)
+	// logger.Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
 
 	return nil
 }

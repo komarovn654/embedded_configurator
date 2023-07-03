@@ -23,7 +23,7 @@ type Range struct {
 	max int
 }
 
-type PllSettings struct {
+type PllTarget struct {
 	PllSource   string `mapstructure:"PllSource" validate:"in:HSE,LSE"`
 	HseFreq     int    `mapstructure:"HseFrequency" validate:"min:4000000|max:24000000"`
 	LseFreq     int    `mapstructure:"LseFrequency" validate:"in:16000000"`
@@ -41,39 +41,39 @@ type divFactors struct {
 	R int
 }
 
-func NewPllSettings() *PllSettings {
-	return &PllSettings{}
+func NewPllTarget() *PllTarget {
+	return new(PllTarget)
 }
 
-func (stng *PllSettings) SetupPll() error {
-	if err := stng.validateFields(); err != nil {
+func (target *PllTarget) SetupPll() error {
+	if err := target.validateFields(); err != nil {
 		return err
 	}
 	logger.Info("success fields validate")
 
-	if err := stng.setSrcFreq(); err != nil {
+	if err := target.setSrcFreq(); err != nil {
 		return err
 	}
-	logger.Infof("pll source freq: %vHz with %v source", stng.SrcFreq, stng.PllSource)
+	logger.Infof("pll source freq: %vHz with %v source", target.SrcFreq, target.PllSource)
 
-	if err := stng.calculateDivisionFactors(); err != nil {
+	if err := target.calculateDivisionFactors(); err != nil {
 		return err
 	}
-	logger.Infof("div factors: m: %v, n: %v, p: %v", stng.DivFactors.M, stng.DivFactors.N, stng.DivFactors.P)
+	logger.Infof("div factors: m: %v, n: %v, p: %v", target.DivFactors.M, target.DivFactors.N, target.DivFactors.P)
 
 	return nil
 }
 
-func (stng *PllSettings) validateFields() error {
-	return validator.Validate(*stng)
+func (target *PllTarget) validateFields() error {
+	return validator.Validate(*target)
 }
 
-func (stng *PllSettings) setSrcFreq() error {
-	switch stng.PllSource {
+func (target *PllTarget) setSrcFreq() error {
+	switch target.PllSource {
 	case "HSE":
-		stng.SrcFreq = stng.HseFreq
+		target.SrcFreq = target.HseFreq
 	case "LSE":
-		stng.SrcFreq = stng.LseFreq
+		target.SrcFreq = target.LseFreq
 	default:
 		return ErrorUnsupPllSource
 	}
@@ -81,9 +81,9 @@ func (stng *PllSettings) setSrcFreq() error {
 	return nil
 }
 
-func (stng *PllSettings) calculateDivisionFactors() error {
+func (target *PllTarget) calculateDivisionFactors() error {
 	for m := FactorM.min; m <= FactorM.max; m++ {
-		vcoIn := stng.SrcFreq / m
+		vcoIn := target.SrcFreq / m
 		if (vcoIn < FreqVcoIn.min) || (vcoIn > FreqVcoIn.max) {
 			continue
 		}
@@ -96,10 +96,10 @@ func (stng *PllSettings) calculateDivisionFactors() error {
 
 			for _, p := range FactorValuesP {
 				pllFreq := vcoOut / p
-				if pllFreq == stng.RequireFreq {
-					stng.DivFactors.M = m
-					stng.DivFactors.N = n
-					stng.DivFactors.P = p
+				if pllFreq == target.RequireFreq {
+					target.DivFactors.M = m
+					target.DivFactors.N = n
+					target.DivFactors.P = p
 					return nil
 				}
 			}

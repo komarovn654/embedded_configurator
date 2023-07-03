@@ -3,50 +3,61 @@ package main
 import (
 	"log"
 
-	parser "github.com/komarovn654/embedded_configurator/config_parser"
-	"github.com/komarovn654/embedded_configurator/generator"
-	stm32_pllconfig "github.com/komarovn654/embedded_configurator/stm32f4xx/pll_config"
+	config "github.com/komarovn654/embedded_configurator/config"
+	stm32targets "github.com/komarovn654/embedded_configurator/targets/stm32"
+	configparser "github.com/komarovn654/embedded_configurator/utils/config_parser"
 	logger "github.com/komarovn654/embedded_configurator/utils/log"
 )
 
-func GenerateHeadersPLL(cnfg *parser.ConfigParser) error {
-	if err := cnfg.Pll.PllSrc.SetupPll(); err != nil {
-		return err
-	}
+func GenerateHeadersPLL(cnfg *configparser.ConfigParser) error {
+	// if err := cnfg.Pll.PllSrc.SetupPll(); err != nil {
+	// 	return err
+	// }
 
-	gnrt, err := generator.New(cnfg.GetPllTmplPath(), cnfg.GetPllDstPath())
-	if err != nil {
-		return err
-	}
+	// gnrt, err := pllgenerator.New(cnfg.GetPllTmplPath(), cnfg.GetPllDstPath())
+	// if err != nil {
+	// 	return err
+	// }
 
-	return gnrt.GenerateHeader(cnfg.Pll)
+	// return gnrt.GenerateHeader(cnfg.Pll)
+	return nil
 }
 
-func GenerateHeadersSTM32(cnfg *parser.ConfigParser) error {
-	err := cnfg.ParseConfig(parser.ConfigInterfaces{parser.PllConfigName: stm32_pllconfig.NewPllSource()})
+func GenerateHeadersSTM32(parser *configparser.ConfigParser) error {
+	cnfg := config.NewConfig()
+	if err := cnfg.SetConfigTargets(stm32targets.GetTargets()); err != nil {
+		return err
+	}
+
+	err := parser.ParseConfig(cnfg)
 	if err != nil {
 		return err
 	}
 
-	return GenerateHeadersPLL(cnfg)
+	return nil
 }
 
 func main() {
-	if err := l.InitializeLogger(l.SetLoggerPath(".log")); err != nil {
+	if err := logger.InitializeLogger(logger.SetLoggerPath("")); err != nil {
 		log.Fatal(err)
 	}
 	logger.Info("embedded configurator start")
 
-	cnfg, err := parser.New(parser.SetConfigName("config"), parser.SetConfigPath("."))
+	parser, err := configparser.New(
+		configparser.SetConfigName("config"),
+		configparser.SetConfigPath("."),
+	)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	switch cnfg.GetMCUType() {
-	case parser.McuSTM32F4xx:
-		err = GenerateHeadersSTM32(cnfg)
+	switch parser.ReadMcuType() {
+	case config.McuStm32f4xx:
+		err = GenerateHeadersSTM32(parser)
 		if err != nil {
 			logger.Fatal(err)
 		}
+	default:
+		logger.Fatal()
 	}
 }

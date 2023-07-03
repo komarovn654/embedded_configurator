@@ -71,7 +71,7 @@ func TestNew(t *testing.T) {
 	t.Run("new generator", func(t *testing.T) {
 		gnrt, err := New(p.tmpl, p.dst)
 		require.NoError(t, err)
-		require.Equal(t, p.dst, gnrt.dstPath)
+		require.Equal(t, p.dst, gnrt.destPath)
 		assertPllTemplate(t, gnrt, "<no value>")
 	})
 }
@@ -84,14 +84,14 @@ func TestInit(t *testing.T) {
 	defer os.RemoveAll(p.dir)
 
 	t.Run("new template", func(t *testing.T) {
-		gnrt := PllGenerator{dstPath: p.dst}
+		gnrt := PllGenerator{destPath: p.dst}
 		err = gnrt.init(p.tmpl)
 		require.NoError(t, err)
 		assertPllTemplate(t, &gnrt, "<no value>")
 	})
 
 	t.Run("template does not exist", func(t *testing.T) {
-		gnrt := PllGenerator{dstPath: p.dst}
+		gnrt := PllGenerator{destPath: p.dst}
 		err = gnrt.init("file does not exist")
 		require.Error(t, err)
 	})
@@ -107,7 +107,7 @@ func TestGenerateHeader(t *testing.T) {
 	t.Run("generate to file", func(t *testing.T) {
 		tmplt, err := template.ParseFiles(p.tmpl)
 		require.NoError(t, err)
-		gnrt := PllGenerator{dstPath: p.dst, tmpl: tmplt}
+		gnrt := PllGenerator{destPath: p.dst, tmpl: tmplt}
 
 		err = gnrt.GenerateHeader("rep string")
 		require.NoError(t, err)
@@ -117,7 +117,7 @@ func TestGenerateHeader(t *testing.T) {
 	t.Run("generate to stdout", func(t *testing.T) {
 		tmplt, err := template.ParseFiles(p.tmpl)
 		require.NoError(t, err)
-		gnrt := PllGenerator{dstPath: "", tmpl: tmplt}
+		gnrt := PllGenerator{destPath: "", tmpl: tmplt}
 
 		err = gnrt.GenerateHeader("rep string")
 		require.NoError(t, err)

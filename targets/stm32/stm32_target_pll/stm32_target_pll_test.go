@@ -10,26 +10,26 @@ import (
 func TestSetupPll(t *testing.T) {
 	tests := []struct {
 		name string
-		src  PllSettings
-		res  PllSettings
+		src  PllTarget
+		res  PllTarget
 		err  bool
 	}{
 		{
 			name: "no err",
-			src:  PllSettings{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 180_000_000},
-			res:  PllSettings{PllSource: "HSE", SrcFreq: 8_000_000, DivFactors: divFactors{M: 4, N: 180, P: 2}},
+			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 180_000_000},
+			res:  PllTarget{PllSource: "HSE", SrcFreq: 8_000_000, DivFactors: divFactors{M: 4, N: 180, P: 2}},
 			err:  false,
 		},
 		{
 			name: "assert err",
-			src:  PllSettings{PllSource: "hse", HseFreq: 8_000_000, RequireFreq: 180_000_000},
-			res:  PllSettings{},
+			src:  PllTarget{PllSource: "hse", HseFreq: 8_000_000, RequireFreq: 180_000_000},
+			res:  PllTarget{},
 			err:  true,
 		},
 		{
 			name: "calculation err",
-			src:  PllSettings{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 1},
-			res:  PllSettings{},
+			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 1},
+			res:  PllTarget{},
 			err:  true,
 		},
 	}
@@ -53,32 +53,32 @@ func TestSetupPll(t *testing.T) {
 func TestAssertFields(t *testing.T) {
 	tests := []struct {
 		name   string
-		src    PllSettings
+		src    PllTarget
 		errors bool
 	}{
 		{
 			name:   "pll source error",
-			src:    PllSettings{PllSource: "sda", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 50},
+			src:    PllTarget{PllSource: "sda", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 50},
 			errors: true,
 		},
 		{
 			name:   "hse freq error",
-			src:    PllSettings{PllSource: "HSE", HseFreq: 0, LseFreq: 16_000_000, RequireFreq: 50},
+			src:    PllTarget{PllSource: "HSE", HseFreq: 0, LseFreq: 16_000_000, RequireFreq: 50},
 			errors: true,
 		},
 		{
 			name:   "lse freq error",
-			src:    PllSettings{PllSource: "LSE", HseFreq: 8_000_000, LseFreq: 0, RequireFreq: 50},
+			src:    PllTarget{PllSource: "LSE", HseFreq: 8_000_000, LseFreq: 0, RequireFreq: 50},
 			errors: true,
 		},
 		{
 			name:   "req freq error",
-			src:    PllSettings{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 200_000_000},
+			src:    PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 200_000_000},
 			errors: true,
 		},
 		{
 			name:   "no error",
-			src:    PllSettings{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 50},
+			src:    PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 50},
 			errors: false,
 		},
 	}
@@ -98,23 +98,23 @@ func TestAssertFields(t *testing.T) {
 func TestSetPllFreq(t *testing.T) {
 	tests := []struct {
 		name     string
-		src      PllSettings
+		src      PllTarget
 		expected int
 	}{
 		{
 			name:     "set hse source",
 			expected: 10,
-			src:      PllSettings{HseFreq: 10, LseFreq: 5, PllSource: "HSE"},
+			src:      PllTarget{HseFreq: 10, LseFreq: 5, PllSource: "HSE"},
 		},
 		{
 			name:     "set lse source",
 			expected: 5,
-			src:      PllSettings{HseFreq: 10, LseFreq: 5, PllSource: "LSE"},
+			src:      PllTarget{HseFreq: 10, LseFreq: 5, PllSource: "LSE"},
 		},
 		{
 			name:     "set unknown source",
 			expected: 0,
-			src:      PllSettings{HseFreq: 10, LseFreq: 5, PllSource: "fsd"},
+			src:      PllTarget{HseFreq: 10, LseFreq: 5, PllSource: "fsd"},
 		},
 	}
 
@@ -130,37 +130,37 @@ func TestSetPllFreq(t *testing.T) {
 func TestCalculateDivisionFactors(t *testing.T) {
 	tests := []struct {
 		name     string
-		src      PllSettings
+		src      PllTarget
 		expected divFactors
 		err      error
 	}{
 		{
 			name:     "calculate for 180Mhz",
-			src:      PllSettings{SrcFreq: 8_000_000, RequireFreq: 180_000_000},
+			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 180_000_000},
 			expected: divFactors{M: 4, N: 180, P: 2},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 120Mhz",
-			src:      PllSettings{SrcFreq: 8_000_000, RequireFreq: 120_000_000},
+			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 120_000_000},
 			expected: divFactors{M: 4, N: 120, P: 2},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 60Mhz",
-			src:      PllSettings{SrcFreq: 8_000_000, RequireFreq: 60_000_000},
+			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 60_000_000},
 			expected: divFactors{M: 4, N: 60, P: 2},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 0Mhz",
-			src:      PllSettings{SrcFreq: 8_000_000, RequireFreq: 0},
+			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 0},
 			expected: divFactors{},
 			err:      ErrorDivFactorCalc,
 		},
 		{
 			name:     "calculate for 181Mhz",
-			src:      PllSettings{SrcFreq: 8_000_000, RequireFreq: 180_000_001},
+			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 180_000_001},
 			expected: divFactors{},
 			err:      ErrorDivFactorCalc,
 		},
