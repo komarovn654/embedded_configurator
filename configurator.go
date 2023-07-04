@@ -1,12 +1,17 @@
 package main
 
 import (
+	"errors"
 	"log"
 
 	config "github.com/komarovn654/embedded_configurator/config"
 	stm32targets "github.com/komarovn654/embedded_configurator/targets/stm32"
 	configparser "github.com/komarovn654/embedded_configurator/utils/config_parser"
 	logger "github.com/komarovn654/embedded_configurator/utils/log"
+)
+
+var (
+	ErrorUnknownMcuType = errors.New("unknown mcu type")
 )
 
 func GenerateHeadersPLL(cnfg *configparser.ConfigParser) error {
@@ -58,6 +63,6 @@ func main() {
 			logger.Fatal(err)
 		}
 	default:
-		logger.Fatal()
+		logger.Fatal(ErrorUnknownMcuType)
 	}
 }

@@ -29,7 +29,7 @@ func InitializeLogger(opt ...Option) error {
 		option(&logger)
 	}
 
-	conf := zap.NewProductionConfig()
+	conf := zap.NewDevelopmentConfig()
 	if logger.path != "" {
 		dir, err := createLogDirectory(logger.path)
 		if err != nil {
@@ -57,17 +57,17 @@ func createLogDirectory(path string) (string, error) {
 }
 
 func Info(args ...interface{}) {
-	logger.zapper.Sugar().Info(args)
+	logger.zapper.Sugar().Info(args...)
 }
 
 func Infof(template string, args ...interface{}) {
-	logger.zapper.Sugar().Infof(template, args)
+	logger.zapper.Sugar().Infof(template, args...)
 }
 
 func Warn(args ...interface{}) {
-	logger.zapper.Sugar().Warn(args)
+	logger.zapper.Sugar().Warn(args...)
 }
 
 func Fatal(args ...interface{}) {
-	logger.zapper.Sugar().Fatal(args)
+	logger.zapper.Sugar().Fatal(args...)
 }

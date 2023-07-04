@@ -30,24 +30,27 @@ type ConfigParser struct {
 }
 
 func New(opts ...Option) (*ConfigParser, error) {
-	parser := new(ConfigParser)
-	parser.parser = viper.New()
+	cp := new(ConfigParser)
+	cp.parser = viper.New()
 	for _, opt := range opts {
-		opt(parser)
+		opt(cp)
 	}
-	parser.applyOptions()
+	cp.applyOptions()
 
-	err := parser.parser.ReadInConfig()
-
-	return parser, err
+	if err := cp.parser.ReadInConfig(); err != nil {
+		return nil, err
+	}
+	logger.Infof("config parser created, config paths: %v, config name: %v",
+		cp.configPaths, cp.configName)
+	return cp, nil
 }
 
-func (parser *ConfigParser) applyOptions() {
-	for _, path := range parser.configPaths {
-		parser.parser.AddConfigPath(path)
+func (cp *ConfigParser) applyOptions() {
+	for _, path := range cp.configPaths {
+		cp.parser.AddConfigPath(path)
 	}
 
-	parser.parser.SetConfigName(parser.configName)
+	cp.parser.SetConfigName(cp.configName)
 }
 
 func SetConfigPath(name string) Option {
@@ -62,8 +65,8 @@ func SetConfigName(name string) Option {
 	}
 }
 
-func (parser *ConfigParser) ReadMcuType() string {
-	mcu, ok := parser.parser.Get("MCU").(string)
+func (cp *ConfigParser) ReadMcuType() string {
+	mcu, ok := cp.parser.Get("MCU").(string)
 	if !ok {
 		return ""
 	}
@@ -71,12 +74,13 @@ func (parser *ConfigParser) ReadMcuType() string {
 	return mcu
 }
 
-func (parser *ConfigParser) ParseConfig(config *config.Configs) error {
-	configType := reflect.TypeOf(config)
+func (cp *ConfigParser) ParseConfig(config *config.Configs) error {
+	configType := reflect.TypeOf(*config)
 	for i := 0; i < configType.NumField(); i++ {
-		switch configType.Name() {
+		logger.Infof("parse target: %v", configType.Field(i).Name)
+		switch configType.Field(i).Name {
 		case pllconfig.ConfigName:
-			if err := parser.parsePllConfig(config.GetPllConfig().GetTarget()); err != nil {
+			if err := cp.parsePllConfig(config.GetPllConfig()); err != nil {
 				return err
 			}
 		default:
@@ -87,13 +91,12 @@ func (parser *ConfigParser) ParseConfig(config *config.Configs) error {
 	return nil
 }
 
-func (parser *ConfigParser) parsePllConfig(target pllconfig.PllTargetIf) error {
-	if err := parser.parser.Unmarshal(target); err != nil {
+func (cp *ConfigParser) parsePllConfig(target *pllconfig.PllConfig) error {
+	if err := cp.parser.Unmarshal(target); err != nil {
 		return err
 	}
-	logger.Info("pll parse done")
-	// logger.Infof("pll src: %+v", target.PllSrc)
-	// logger.Infof("pll template: %v; tmpl dst: %v", cnfg.Pll.Paths.PllTemplate, cnfg.Pll.Paths.PllDstPath)
+	logger.Infof("target paths: %+v", target.GetPath())
+	logger.Infof("target: %+v", target.GetTarget())
 
 	return nil
 }

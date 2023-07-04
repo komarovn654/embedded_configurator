@@ -5,14 +5,40 @@ type Paths struct {
 	DestinationPath string `mapstructure:"DestinationPath"`
 }
 
-func New() *Paths {
-	return new(Paths)
+type Option = func(*Paths)
+
+func SetTemplatePath(path string) Option {
+	return func(p *Paths) {
+		p.TemplatePath = path
+	}
 }
 
-func (c *Paths) GetTemplatePath() string {
-	return c.TemplatePath
+func SetDestinationPath(path string) Option {
+	return func(p *Paths) {
+		p.DestinationPath = path
+	}
 }
 
-func (c *Paths) GetDestinationPath() string {
-	return c.DestinationPath
+func New(opt ...Option) *Paths {
+	p := new(Paths)
+	for _, option := range opt {
+		option(p)
+	}
+	return p
+}
+
+func (p *Paths) SetTemplatePath(path string) {
+	p.TemplatePath = path
+}
+
+func (p *Paths) SetDestinationPath(path string) {
+	p.DestinationPath = path
+}
+
+func (p *Paths) GetTemplatePath() string {
+	return p.TemplatePath
+}
+
+func (p *Paths) GetDestinationPath() string {
+	return p.DestinationPath
 }
