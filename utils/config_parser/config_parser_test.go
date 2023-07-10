@@ -2,74 +2,121 @@ package configparser
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"testing"
+
+	logger "github.com/komarovn654/embedded_configurator/utils/log"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 )
 
-func TestNew(t *testing.T) {
-	p, err := New(SetConfigName("config"), SetConfigPath("./../../"))
-	fmt.Println(p, err)
-	fmt.Println(p.parser.AllKeys())
+type confPaths struct {
+	dir      string
+	nameYaml string
+	nameFull string
 }
 
-// import (
-// 	"os"
-// 	"strconv"
-// 	"strings"
-// 	"testing"
+func setupTmp() (*confPaths, error) {
+	logger.InitializeLogger()
 
-// 	"github.com/mitchellh/mapstructure"
-// 	"github.com/spf13/viper"
-// 	"github.com/stretchr/testify/require"
-// )
+	tmpDir, err := os.MkdirTemp("./", "TestCnfg")
+	if err != nil {
+		return nil, err
+	}
+	cnfg, err := os.CreateTemp(tmpDir, "cnfg")
+	if err != nil {
+		return nil, err
+	}
+	defer cnfg.Close()
 
-// func TestSetConfigPath(t *testing.T) {
-// 	t.Run("common", func(t *testing.T) {
-// 		cnfg := ConfigParser{}
-// 		paths := make([]string, 10)
-// 		for i := 0; i < 10; i++ {
-// 			path := "test_path" + strconv.Itoa(i)
-// 			opt := SetConfigPath(path)
-// 			opt(&cnfg)
-// 			paths[i] = path
-// 		}
+	os.Rename(cnfg.Name(), cnfg.Name()+".yaml")
 
-// 		require.Equal(t, cnfg.configPaths, paths)
-// 	})
-// }
+	cp := new(confPaths)
+	cp.dir = tmpDir
+	cp.nameYaml = strings.Split(cnfg.Name(), "/")[2]
+	cp.nameFull = cnfg.Name() + ".yaml"
+	fmt.Println(cp)
+	return cp, err
+}
 
-// func TestSetConfigName(t *testing.T) {
-// 	t.Run("common", func(t *testing.T) {
-// 		cnfg := ConfigParser{}
-// 		name := "test_name"
-// 		opt := SetConfigName(name)
-// 		opt(&cnfg)
+func (cp *confPaths) writeConfigString(cnfgText string) error {
+	f, err := os.OpenFile(cp.nameFull, os.O_RDWR, 0777)
+	if err != nil {
+		return err
+	}
 
-// 		require.Equal(t, cnfg.configName, name)
-// 	})
-// }
+	_, err = f.WriteString(cnfgText)
 
-// func TestApplyOptions(t *testing.T) {
-// 	paths, err := setupTmp()
-// 	require.NoError(t, err, "setup environment error")
-// 	defer os.RemoveAll(paths.dir)
+	return err
+}
 
-// 	t.Run("common", func(t *testing.T) {
-// 		cnfg := ConfigParser{parser: viper.New()}
-// 		path := paths.dir
-// 		name := strings.Split(paths.name, "/")[2] // get file name only without path and ".yaml"
-// 		opt := SetConfigPath(path)
-// 		opt(&cnfg)
-// 		opt = SetConfigName(name)
-// 		opt(&cnfg)
+func TestNew(t *testing.T) {
+	paths, err := setupTmp()
+	require.NoError(t, err, "setup environment error")
+	defer os.RemoveAll(paths.dir)
 
-// 		err := cnfg.parser.ReadInConfig()
-// 		require.Error(t, err)
+	t.Run("new config parser with opt", func(t *testing.T) {
+		cp, err := New(SetConfigName(paths.nameYaml), SetConfigPath(paths.dir))
+		require.NoError(t, err)
+		require.NotNil(t, cp.parser)
+		require.Equal(t, paths.nameYaml, cp.configName)
+		require.Equal(t, []string{paths.dir}, cp.configPaths)
+	})
 
-// 		cnfg.applyOptions()
-// 		err = cnfg.parser.ReadInConfig()
-// 		require.NoError(t, err)
-// 	})
-// }
+	t.Run("new config parser without opt", func(t *testing.T) {
+		_, err := New()
+		require.Error(t, err)
+	})
+}
+
+func TestSetConfigPath(t *testing.T) {
+	t.Run("common", func(t *testing.T) {
+		cnfg := ConfigParser{}
+		paths := make([]string, 10)
+		for i := 0; i < 10; i++ {
+			path := "test_path" + strconv.Itoa(i)
+			opt := SetConfigPath(path)
+			opt(&cnfg)
+			paths[i] = path
+		}
+
+		require.Equal(t, cnfg.configPaths, paths)
+	})
+}
+
+func TestSetConfigName(t *testing.T) {
+	t.Run("common", func(t *testing.T) {
+		cnfg := ConfigParser{}
+		name := "test_name"
+		opt := SetConfigName(name)
+		opt(&cnfg)
+
+		require.Equal(t, cnfg.configName, name)
+	})
+}
+
+func TestApplyOptions(t *testing.T) {
+	paths, err := setupTmp()
+	require.NoError(t, err, "setup environment error")
+	defer os.RemoveAll(paths.dir)
+
+	t.Run("common", func(t *testing.T) {
+		cnfg := ConfigParser{parser: viper.New()}
+		opt := SetConfigPath(paths.dir)
+		opt(&cnfg)
+		opt = SetConfigName(paths.nameYaml)
+		opt(&cnfg)
+
+		err := cnfg.parser.ReadInConfig()
+		require.Error(t, err)
+
+		cnfg.applyOptions()
+		err = cnfg.parser.ReadInConfig()
+		require.NoError(t, err)
+	})
+}
 
 // func TestSetMCUType(t *testing.T) {
 // 	paths, err := setupTmp()
@@ -115,77 +162,67 @@ func TestNew(t *testing.T) {
 // 	}
 // }
 
-// func TestGetMCUType(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		mcu  string
-// 	}{
-// 		{
-// 			name: "any mcu",
-// 			mcu:  "my mcu",
-// 		},
-// 		{
-// 			name: "empty string",
-// 			mcu:  "",
-// 		},
-// 	}
+func TestReadMCUType(t *testing.T) {
+	paths, err := setupTmp()
+	require.NoError(t, err, "setup environment error")
+	defer os.RemoveAll(paths.dir)
 
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			cnfg := ConfigParser{parser: viper.New(), mcu: tc.mcu}
+	t.Run("any mcu", func(t *testing.T) {
+		err := paths.writeConfigString("MCU: " + "my mcu")
+		require.NoError(t, err, "setup environment error")
+		cnfg, err := New(SetConfigName(paths.nameYaml), SetConfigPath(paths.dir))
+		require.NoError(t, err, "setup environment error")
 
-// 			require.Equal(t, tc.mcu, cnfg.GetMCUType())
-// 		})
-// 	}
-// }
+		require.Equal(t, "my mcu", cnfg.ReadMcuType())
+	})
 
-// func TestGetPllTmplPath(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		path string
-// 	}{
-// 		{
-// 			name: "any path",
-// 			path: "my path",
-// 		},
-// 		{
-// 			name: "empty string",
-// 			path: "",
-// 		},
-// 	}
+	t.Run("no mcu", func(t *testing.T) {
+		err := paths.writeConfigString(" ")
+		cnfg, err := New(SetConfigName(paths.nameYaml), SetConfigPath(paths.dir))
+		require.NoError(t, err, "setup environment error")
 
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{Paths: Common{PllTemplate: tc.path}}}
+		require.Equal(t, "", cnfg.ReadMcuType())
+	})
+}
 
-// 			require.Equal(t, tc.path, cnfg.GetPllTmplPath())
-// 		})
-// 	}
-// }
+func TestParseConfig(t *testing.T) {
+	paths, err := setupTmp()
+	require.NoError(t, err, "setup environment error")
+	defer os.RemoveAll(paths.dir)
 
-// func TestGetPllDstPath(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		path string
-// 	}{
-// 		{
-// 			name: "any path",
-// 			path: "my path",
-// 		},
-// 		{
-// 			name: "empty string",
-// 			path: "",
-// 		},
-// 	}
+	tests := []struct {
+		name      string
+		intf      ConfigInterfaces
+		err       error
+		assertRes bool
+	}{
+		{
+			name:      "valid interfaces",
+			intf:      ConfigInterfaces{PllConfigName: &TestPllSource{}},
+			err:       nil,
+			assertRes: true,
+		},
+		{
+			name:      "valid interfaces",
+			intf:      ConfigInterfaces{"unsup interface": &TestPllSource{}},
+			err:       ErrorConfigType,
+			assertRes: false,
+		},
+	}
 
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{Paths: Common{PllDstPath: tc.path}}}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{}}
+			err = writeConfigMap(paths.name+".yaml", ValidConfig)
+			require.NoError(t, err, "setup environment error")
+			err = setupConfig(&cnfg, paths.name)
+			require.NoError(t, err, "setup environment error")
 
-// 			require.Equal(t, tc.path, cnfg.GetPllDstPath())
-// 		})
-// 	}
-// }
+			require.Equal(t, tc.err, cnfg.ParseConfig(tc.intf))
+		})
+	}
+
+}
 
 // func TestParsePllConfig(t *testing.T) {
 // 	paths, err := setupTmp()
@@ -227,45 +264,6 @@ func TestNew(t *testing.T) {
 // 			require.Equal(t, tc.assertRes, assertPllFields(refPll, &cnfg))
 // 		})
 // 	}
-// }
-
-// func TestParseConfig(t *testing.T) {
-// 	paths, err := setupTmp()
-// 	require.NoError(t, err, "setup environment error")
-// 	defer os.RemoveAll(paths.dir)
-
-// 	tests := []struct {
-// 		name      string
-// 		intf      ConfigInterfaces
-// 		err       error
-// 		assertRes bool
-// 	}{
-// 		{
-// 			name:      "valid interfaces",
-// 			intf:      ConfigInterfaces{PllConfigName: &TestPllSource{}},
-// 			err:       nil,
-// 			assertRes: true,
-// 		},
-// 		{
-// 			name:      "valid interfaces",
-// 			intf:      ConfigInterfaces{"unsup interface": &TestPllSource{}},
-// 			err:       ErrorConfigType,
-// 			assertRes: false,
-// 		},
-// 	}
-
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			cnfg := ConfigParser{parser: viper.New(), Pll: &PllConfig{}}
-// 			err = writeConfigMap(paths.name+".yaml", ValidConfig)
-// 			require.NoError(t, err, "setup environment error")
-// 			err = setupConfig(&cnfg, paths.name)
-// 			require.NoError(t, err, "setup environment error")
-
-// 			require.Equal(t, tc.err, cnfg.ParseConfig(tc.intf))
-// 		})
-// 	}
-
 // }
 
 // func TestNew(t *testing.T) {

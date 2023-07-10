@@ -10,11 +10,6 @@ package configparser
 
 // type ConfigMap map[string]map[string]interface{}
 
-// type confPaths struct {
-// 	dir  string
-// 	name string
-// }
-
 // type TestConfig struct {
 // 	PllSrc PllSourceIf `mapstructure:"PllConfig"`
 
@@ -41,35 +36,6 @@ package configparser
 // 			"RequireFrequency": 180000000,
 // 		}}
 // )
-
-// func setupTmp() (confPaths, error) {
-// 	l.InitializeLogger()
-
-// 	tmpDir, err := os.MkdirTemp("./", "TestCnfg")
-// 	if err != nil {
-// 		return confPaths{}, err
-// 	}
-// 	cnfg, err := os.CreateTemp(tmpDir, "cnfg")
-// 	if err != nil {
-// 		return confPaths{}, err
-// 	}
-// 	defer cnfg.Close()
-
-// 	os.Rename(cnfg.Name(), cnfg.Name()+".yaml")
-
-// 	return confPaths{dir: tmpDir, name: cnfg.Name()}, err
-// }
-
-// func writeConfigString(cnfgPath string, cnfgText string) error {
-// 	f, err := os.OpenFile(cnfgPath, os.O_RDWR, 0777)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	_, err = f.WriteString(cnfgText)
-
-// 	return err
-// }
 
 // func writeConfigMap(cnfgPath string, cnfgMap ConfigMap) error {
 // 	f, err := os.OpenFile(cnfgPath, os.O_RDWR, 0777)

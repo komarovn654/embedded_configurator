@@ -11,24 +11,26 @@ type PllGenerator struct {
 	tmpl *template.Template
 
 	destPath string
+	tmplPath string
 }
 
 func New(tmplPath string, dstPath string) (*PllGenerator, error) {
 	gnrt := new(PllGenerator)
 	gnrt.destPath = dstPath
-	if err := gnrt.init(tmplPath); err != nil {
+	gnrt.tmplPath = tmplPath
+	if err := gnrt.init(); err != nil {
 		return nil, err
 	}
 	return gnrt, nil
 }
 
-func (gnrt *PllGenerator) init(tmplPath string) error {
-	tmpl, err := template.ParseFiles(tmplPath)
+func (gnrt *PllGenerator) init() error {
+	tmpl, err := template.ParseFiles(gnrt.tmplPath)
 	if err != nil {
 		return err
 	}
 
-	logger.Infof("pll generator instance: tmpl: %v", tmplPath)
+	logger.Infof("pll generator instance: tmpl: %v", gnrt.tmplPath)
 	gnrt.tmpl = tmpl
 	return nil
 }

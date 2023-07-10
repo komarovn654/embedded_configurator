@@ -95,7 +95,7 @@ func (cp *ConfigParser) parsePllConfig(target *pllconfig.PllConfig) error {
 	if err := cp.parser.Unmarshal(target); err != nil {
 		return err
 	}
-	logger.Infof("target paths: %+v", target.GetPath())
+	// logger.Infof("target paths: %+v", target.GetPath())
 	logger.Infof("target: %+v", target.GetTarget())
 
 	return nil

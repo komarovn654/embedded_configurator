@@ -24,7 +24,7 @@ type paths struct {
 func setupTmp() (paths, error) {
 	l.InitializeLogger()
 
-	tmpDir, err := os.MkdirTemp("./", "TestCopy")
+	tmpDir, err := os.MkdirTemp("./", "Test")
 	if err != nil {
 		return paths{}, err
 	}
@@ -63,36 +63,34 @@ func cmpTmpltWithDst(t *testing.T, tmpl string, dst string, replaced string) {
 
 func TestNew(t *testing.T) {
 	p, err := setupTmp()
-	if err != nil {
-		require.Fail(t, "setup environment error")
-	}
+	require.NoError(t, err, "setup environment error")
 	defer os.RemoveAll(p.dir)
 
 	t.Run("new generator", func(t *testing.T) {
 		gnrt, err := New(p.tmpl, p.dst)
 		require.NoError(t, err)
+		require.NotNil(t, gnrt)
 		require.Equal(t, p.dst, gnrt.destPath)
+		require.Equal(t, p.tmpl, gnrt.destPath)
 		assertPllTemplate(t, gnrt, "<no value>")
 	})
 }
 
 func TestInit(t *testing.T) {
 	p, err := setupTmp()
-	if err != nil {
-		require.Fail(t, "setup environment error")
-	}
+	require.NoError(t, err, "setup environment error")
 	defer os.RemoveAll(p.dir)
 
 	t.Run("new template", func(t *testing.T) {
-		gnrt := PllGenerator{destPath: p.dst}
-		err = gnrt.init(p.tmpl)
+		gnrt := PllGenerator{destPath: p.dst, tmplPath: p.tmpl}
+		err = gnrt.init()
 		require.NoError(t, err)
 		assertPllTemplate(t, &gnrt, "<no value>")
 	})
 
 	t.Run("template does not exist", func(t *testing.T) {
 		gnrt := PllGenerator{destPath: p.dst}
-		err = gnrt.init("file does not exist")
+		err = gnrt.init()
 		require.Error(t, err)
 	})
 }
