@@ -9,10 +9,11 @@ compile: clean
 	go build $(GOFILES)
 
 run:
-	go run $(GOFILES)
+	go run $(GOFILES) -config config -config_path .
 	
 test:
 	go test $(GOTESTPACKAGES)
 
 clean:
 	go clean
+	rm *.h
