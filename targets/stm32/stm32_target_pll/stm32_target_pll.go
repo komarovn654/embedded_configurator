@@ -24,9 +24,9 @@ type Range struct {
 }
 
 type PllTarget struct {
-	PllSource   string `mapstructure:"PllSource" validate:"in:HSE,LSE"`
+	PllSource   string `mapstructure:"PllSource" validate:"in:HSE,HSI"`
 	HseFreq     int    `mapstructure:"HseFrequency" validate:"min:4000000|max:24000000"`
-	LseFreq     int    `mapstructure:"LseFrequency" validate:"in:16000000"`
+	HsiFreq     int    `mapstructure:"HsiFrequency" validate:"in:16000000"`
 	RequireFreq int    `mapstructure:"RequireFrequency" validate:"max:180000000"`
 
 	SrcFreq    int
@@ -72,8 +72,8 @@ func (target *PllTarget) setSrcFreq() error {
 	switch target.PllSource {
 	case "HSE":
 		target.SrcFreq = target.HseFreq
-	case "LSE":
-		target.SrcFreq = target.LseFreq
+	case "HSI":
+		target.SrcFreq = target.HsiFreq
 	default:
 		return ErrorUnsupPllSource
 	}

@@ -1,5 +1,7 @@
+#pragma once
+
 #define HSE_FREQUENCY {{.Target.HseFreq}}
-#define LSE_FREQUENCY {{.Target.LseFreq}}
+#define HSI_FREQUENCY {{.Target.HsiFreq}}
 #define PLL_SOURCE    PLL_SOURCE_{{.Target.PllSource}}
 
 #define PLL_REQUIRED_FREQUENCY {{.Target.RequireFreq}}

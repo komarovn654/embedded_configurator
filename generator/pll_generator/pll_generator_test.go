@@ -71,7 +71,7 @@ func TestNew(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, gnrt)
 		require.Equal(t, p.dst, gnrt.destPath)
-		require.Equal(t, p.tmpl, gnrt.destPath)
+		require.Equal(t, p.tmpl, gnrt.tmplPath)
 		assertPllTemplate(t, gnrt, "<no value>")
 	})
 }

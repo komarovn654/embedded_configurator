@@ -16,7 +16,7 @@ func TestSetupPll(t *testing.T) {
 	}{
 		{
 			name: "no err",
-			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 180_000_000},
+			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 180_000_000},
 			res:  PllTarget{PllSource: "HSE", SrcFreq: 8_000_000, DivFactors: divFactors{M: 4, N: 180, P: 2}},
 			err:  false,
 		},
@@ -28,7 +28,7 @@ func TestSetupPll(t *testing.T) {
 		},
 		{
 			name: "calculation err",
-			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 1},
+			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 1},
 			res:  PllTarget{},
 			err:  true,
 		},
@@ -58,27 +58,27 @@ func TestAssertFields(t *testing.T) {
 	}{
 		{
 			name:   "pll source error",
-			src:    PllTarget{PllSource: "sda", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 50},
+			src:    PllTarget{PllSource: "sda", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 50},
 			errors: true,
 		},
 		{
 			name:   "hse freq error",
-			src:    PllTarget{PllSource: "HSE", HseFreq: 0, LseFreq: 16_000_000, RequireFreq: 50},
+			src:    PllTarget{PllSource: "HSE", HseFreq: 0, HsiFreq: 16_000_000, RequireFreq: 50},
 			errors: true,
 		},
 		{
-			name:   "lse freq error",
-			src:    PllTarget{PllSource: "LSE", HseFreq: 8_000_000, LseFreq: 0, RequireFreq: 50},
+			name:   "hsi freq error",
+			src:    PllTarget{PllSource: "HSI", HseFreq: 8_000_000, HsiFreq: 0, RequireFreq: 50},
 			errors: true,
 		},
 		{
 			name:   "req freq error",
-			src:    PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 200_000_000},
+			src:    PllTarget{PllSource: "HSE", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 200_000_000},
 			errors: true,
 		},
 		{
 			name:   "no error",
-			src:    PllTarget{PllSource: "HSE", HseFreq: 8_000_000, LseFreq: 16_000_000, RequireFreq: 50},
+			src:    PllTarget{PllSource: "HSE", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 50},
 			errors: false,
 		},
 	}
@@ -104,17 +104,17 @@ func TestSetPllFreq(t *testing.T) {
 		{
 			name:     "set hse source",
 			expected: 10,
-			src:      PllTarget{HseFreq: 10, LseFreq: 5, PllSource: "HSE"},
+			src:      PllTarget{HseFreq: 10, HsiFreq: 5, PllSource: "HSE"},
 		},
 		{
-			name:     "set lse source",
+			name:     "set hsi source",
 			expected: 5,
-			src:      PllTarget{HseFreq: 10, LseFreq: 5, PllSource: "LSE"},
+			src:      PllTarget{HseFreq: 10, HsiFreq: 5, PllSource: "HSI"},
 		},
 		{
 			name:     "set unknown source",
 			expected: 0,
-			src:      PllTarget{HseFreq: 10, LseFreq: 5, PllSource: "fsd"},
+			src:      PllTarget{HseFreq: 10, HsiFreq: 5, PllSource: "fsd"},
 		},
 	}
 
