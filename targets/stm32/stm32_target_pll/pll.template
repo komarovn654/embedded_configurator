@@ -11,7 +11,7 @@
 
 #define PLL_REQUIRED_FREQUENCY ({{.Target.RequireFreq}})
 #define PLL_SOURCE_FREQUENCY   ({{.Target.SrcFreq}})
-#define PLL_48CLK_FREQUENCY    (PLL_SOURCE_{{.Target.Pll48Freq}})
+#define PLL_48CLK_FREQUENCY    ({{.Target.Pll48Freq}})
 
 #define PLL_DIV_FACTOR_M ({{.Target.DivFactors.M}})
 #define PLL_DIV_FACTOR_N ({{.Target.DivFactors.N}})
