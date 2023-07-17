@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	configName, configPath string
+	configName, configPath, loggerPath string
 
 	ErrorUnknownMcuType = errors.New("unknown mcu type")
 )
@@ -51,13 +51,14 @@ func GenerateHeadersSTM32(parser *configparser.ConfigParser) error {
 func initFlags() {
 	flag.StringVar(&configName, "config", "", "yaml config name")
 	flag.StringVar(&configPath, "config_path", ".", "config path")
+	flag.StringVar(&loggerPath, "logger_path", ".log", "config path")
 	flag.Parse()
 }
 
 func main() {
 	initFlags()
 
-	if err := logger.InitializeLogger(logger.SetLoggerPath("")); err != nil {
+	if err := logger.InitializeLogger(logger.SetLoggerPath(loggerPath)); err != nil {
 		log.Fatal(err)
 	}
 	logger.Info("embedded configurator start")

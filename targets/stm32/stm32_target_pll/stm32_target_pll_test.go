@@ -128,6 +128,8 @@ func TestSetPllFreq(t *testing.T) {
 }
 
 func TestCalculateDivisionFactors(t *testing.T) {
+	l.InitializeLogger()
+
 	tests := []struct {
 		name     string
 		src      PllTarget
@@ -137,19 +139,19 @@ func TestCalculateDivisionFactors(t *testing.T) {
 		{
 			name:     "calculate for 180Mhz",
 			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 180_000_000},
-			expected: divFactors{M: 4, N: 180, P: 2},
+			expected: divFactors{M: 4, N: 180, P: 2, Q: 8},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 120Mhz",
 			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 120_000_000},
-			expected: divFactors{M: 4, N: 120, P: 2},
+			expected: divFactors{M: 4, N: 120, P: 2, Q: 5},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 60Mhz",
 			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 60_000_000},
-			expected: divFactors{M: 4, N: 60, P: 2},
+			expected: divFactors{M: 4, N: 60, P: 2, Q: 3},
 			err:      nil,
 		},
 		{
@@ -171,6 +173,89 @@ func TestCalculateDivisionFactors(t *testing.T) {
 			err := tc.src.calculateDivisionFactors()
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.expected, tc.src.DivFactors)
+		})
+	}
+}
+
+func TestSetQ(t *testing.T) {
+	t.Run("usb prio", func(t *testing.T) {
+		validFreqs := map[int]int{
+			144000000: 3,
+			192000000: 4,
+			240000000: 5,
+			288000000: 6,
+			336000000: 7,
+			384000000: 8,
+			432000000: 9,
+		}
+		for vco := 144000000; vco <= FreqVcoOut.max; vco += 24_000_000 {
+			target := NewPllTarget()
+			target.UsbFreqPrio = true
+			err := target.setQ(vco)
+			if q, ok := validFreqs[vco]; ok {
+				require.Equal(t, USBFreq, target.Pll48Freq)
+				require.Equal(t, q, target.DivFactors.Q)
+				require.NoError(t, err)
+				continue
+			}
+			require.Equal(t, err, ErrorAssertQ)
+		}
+	})
+	t.Run("without usb prio", func(t *testing.T) {
+		for vco := 144000000; vco <= FreqVcoOut.max; vco += 10_000_000 {
+			target := NewPllTarget()
+			err := target.setQ(vco)
+			require.LessOrEqual(t, target.Pll48Freq, USBFreq)
+			require.GreaterOrEqual(t, target.DivFactors.Q, FactorQ.min)
+			require.LessOrEqual(t, target.DivFactors.Q, FactorQ.max)
+			require.NoError(t, err)
+		}
+	})
+}
+
+func TestAssertFrequency(t *testing.T) {
+	tests := []struct {
+		name  string
+		value int
+		rng   Range
+		err   error
+	}{
+		{
+			name:  "no error",
+			value: 11,
+			rng:   Range{0, 11},
+			err:   nil,
+		},
+		{
+			name:  "no error",
+			value: 0,
+			rng:   Range{0, 11},
+			err:   nil,
+		},
+		{
+			name:  "no error",
+			value: 5,
+			rng:   Range{0, 11},
+			err:   nil,
+		},
+		{
+			name:  "error",
+			value: 144,
+			rng:   Range{0, 11},
+			err:   ErrorAssertVcoFreq,
+		},
+		{
+			name:  "error",
+			value: -1,
+			rng:   Range{0, 11},
+			err:   ErrorAssertVcoFreq,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := assertFrequency(tc.value, tc.rng.min, tc.rng.max)
+			require.Equal(t, tc.err, err)
 		})
 	}
 }

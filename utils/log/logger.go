@@ -68,6 +68,10 @@ func Warn(args ...interface{}) {
 	logger.zapper.Sugar().Warn(args...)
 }
 
+func Warnf(template string, args ...interface{}) {
+	logger.zapper.Sugar().Warnf(template, args...)
+}
+
 func Fatal(args ...interface{}) {
 	logger.zapper.Sugar().Fatal(args...)
 }
