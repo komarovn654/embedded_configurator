@@ -3,7 +3,7 @@ PllConfig:
   PllSource: HSE
   HseFrequency: 8000000
   HsiFrequency: 16000000
-  RequireFrequency: 64000000
+  RequireFrequency: 168000000
   UsbFrequencyPriority: true
   TemplatePath: ./targets/stm32/stm32_target_pll/pll.template
-  DestinationPath: ./pll.h
+  DestinationPath: /Users/nikolajkomarov/stm32f4xx_hal/lib/rcc/inc/hal_rcc_gen.h

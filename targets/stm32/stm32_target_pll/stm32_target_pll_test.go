@@ -16,8 +16,8 @@ func TestSetupPll(t *testing.T) {
 	}{
 		{
 			name: "no err",
-			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 180_000_000},
-			res:  PllTarget{PllSource: "HSE", SrcFreq: 8_000_000, DivFactors: divFactors{M: 4, N: 180, P: 2}},
+			src:  PllTarget{PllSource: "HSE", HseFreq: 8_000_000, HsiFreq: 16_000_000, RequireFreq: 180_000_000, UsbFreqPrio: false},
+			res:  PllTarget{PllSource: "HSE", SrcFreq: 8_000_000, DivFactors: divFactors{M: 4, N: 180, P: 0, Q: 8}},
 			err:  false,
 		},
 		{
@@ -139,19 +139,19 @@ func TestCalculateDivisionFactors(t *testing.T) {
 		{
 			name:     "calculate for 180Mhz",
 			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 180_000_000},
-			expected: divFactors{M: 4, N: 180, P: 2, Q: 8},
+			expected: divFactors{M: 4, N: 180, P: 0, Q: 8},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 120Mhz",
 			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 120_000_000},
-			expected: divFactors{M: 4, N: 120, P: 2, Q: 5},
+			expected: divFactors{M: 4, N: 120, P: 0, Q: 5},
 			err:      nil,
 		},
 		{
 			name:     "calculate for 60Mhz",
 			src:      PllTarget{SrcFreq: 8_000_000, RequireFreq: 60_000_000},
-			expected: divFactors{M: 4, N: 60, P: 2, Q: 3},
+			expected: divFactors{M: 4, N: 60, P: 0, Q: 3},
 			err:      nil,
 		},
 		{

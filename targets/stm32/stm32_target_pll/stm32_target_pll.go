@@ -131,12 +131,12 @@ func (target *PllTarget) calculateDivisionFactors() error {
 				continue
 			}
 
-			for _, p := range FactorValuesP {
-				pllFreq := vcoOut / p
+			for regI, regV := range FactorValuesP {
+				pllFreq := vcoOut / regV
 				if pllFreq == target.RequireFreq {
 					target.DivFactors.M = m
 					target.DivFactors.N = n
-					target.DivFactors.P = p
+					target.DivFactors.P = regI
 					logger.Infof("VcoIn: %v, VcoOut: %v", vcoIn, vcoOut)
 					return nil
 				}

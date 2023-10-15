@@ -1,6 +1,7 @@
 PROJECTNAME=$("embedded configurator")
 
-GOTESTPACKAGES=./config/ ./generator/ ./stm32f4xx/ ./stm32f4xx/pll_config/
+GOTESTPACKAGES=./config ./config/common_paths ./config/pll_config ./generator/pll_generator ./targets/stm32 ./targets/stm32/stm32_target_pll ./utils/config_parser
+
 GOFILES=$(wildcard *.go)
 
 MAKEFLAGS += silent
